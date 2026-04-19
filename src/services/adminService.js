@@ -7,7 +7,7 @@ import { db } from "./firebase";
 
 // ── CHANGE THESE ──────────────────────────────────────────────
 export const ADMIN_EMAIL    = "mohitsingh97941111@gmail.com";
-export const ADMIN_PASSWORD = "NoteHub@Admin2024"; // ← apna password set karo
+export const ADMIN_PASSWORD = "mohit@3301"; // ← apna password set karo
 // ─────────────────────────────────────────────────────────────
 
 export const isAdminUser = (email) => email === ADMIN_EMAIL;
