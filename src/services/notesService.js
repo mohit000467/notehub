@@ -1,6 +1,4 @@
 // src/services/notesService.js
-// Uses Cloudinary for file storage instead of Firebase Storage
-
 import {
   collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc,
   query, where, orderBy, increment, serverTimestamp, arrayUnion, limit,
@@ -19,17 +17,13 @@ const uploadToCloudinary = async (file, onProgress) => {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.upload.addEventListener("progress", (e) => {
-      if (e.lengthComputable && onProgress) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
     });
     xhr.addEventListener("load", () => {
       if (xhr.status === 200) {
         const res = JSON.parse(xhr.responseText);
         resolve({ fileURL: res.secure_url, publicId: res.public_id });
-      } else {
-        reject(new Error("Cloudinary upload failed"));
-      }
+      } else reject(new Error("Cloudinary upload failed"));
     });
     xhr.addEventListener("error", () => reject(new Error("Upload failed")));
     xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`);
@@ -41,7 +35,6 @@ export const uploadNote = async (noteData, file, userId, username, onProgress) =
   try {
     const { fileURL, publicId } = await uploadToCloudinary(file, onProgress);
     const fileExtension = file.name.split(".").pop();
-
     const noteDoc = await addDoc(collection(db, "notes"), {
       userId, username, uploaderName: username,
       subject: noteData.subject.trim().toLowerCase(),
@@ -57,11 +50,7 @@ export const uploadNote = async (noteData, file, userId, username, onProgress) =
       downloadCount: 0, ratedBy: [],
       createdAt: serverTimestamp(),
     });
-
-    await updateDoc(doc(db, "users", userId), {
-      uploadedNotes: arrayUnion(noteDoc.id),
-    });
-
+    await updateDoc(doc(db, "users", userId), { uploadedNotes: arrayUnion(noteDoc.id) });
     return { success: true, noteId: noteDoc.id };
   } catch (error) {
     return { success: false, error: error.message };
@@ -78,7 +67,20 @@ export const getNotesBySubject = async (subject, sortBy = "createdAt") => {
       orderBy(sortField, "desc")
     );
     const snapshot = await getDocs(q);
-    return { success: true, data: snapshot.docs.map(d => ({ id: d.id, ...d.data() })) };
+
+    // ✅ Filter out notes from private users
+    const notes = [];
+    for (const d of snapshot.docs) {
+      const data = d.data();
+      const userSnap = await getDoc(doc(db, "users", data.userId));
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if (userData.profileVisibility !== "private") {
+          notes.push({ id: d.id, ...data });
+        }
+      }
+    }
+    return { success: true, data: notes };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -98,13 +100,37 @@ export const getAllSubjects = async () => {
   try {
     const snapshot = await getDocs(collection(db, "notes"));
     const map = {};
-    snapshot.docs.forEach(d => {
+
+    for (const d of snapshot.docs) {
       const data = d.data();
+      // ✅ Skip notes from private users
+      const userSnap = await getDoc(doc(db, "users", data.userId));
+      if (userSnap.exists() && userSnap.data().profileVisibility === "private") continue;
+
       if (!map[data.subject]) map[data.subject] = { subject: data.subject, subjectDisplay: data.subjectDisplay, count: 0, tags: new Set() };
       map[data.subject].count++;
       (data.tags || []).forEach(t => map[data.subject].tags.add(t));
-    });
+    }
     return { success: true, data: Object.values(map).map(s => ({ ...s, tags: Array.from(s.tags) })) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getRecentNotes = async (limitCount = 12) => {
+  try {
+    const q = query(collection(db, "notes"), orderBy("createdAt", "desc"), limit(limitCount));
+    const snapshot = await getDocs(q);
+
+    // ✅ Filter out notes from private users
+    const notes = [];
+    for (const d of snapshot.docs) {
+      const data = d.data();
+      const userSnap = await getDoc(doc(db, "users", data.userId));
+      if (userSnap.exists() && userSnap.data().profileVisibility === "private") continue;
+      notes.push({ id: d.id, ...data });
+    }
+    return { success: true, data: notes };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -151,16 +177,6 @@ export const getNoteById = async (noteId) => {
     const docSnap = await getDoc(doc(db, "notes", noteId));
     if (docSnap.exists()) return { success: true, data: { id: docSnap.id, ...docSnap.data() } };
     return { success: false, error: "Note not found" };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-};
-
-export const getRecentNotes = async (limitCount = 12) => {
-  try {
-    const q = query(collection(db, "notes"), orderBy("createdAt", "desc"), limit(limitCount));
-    const snapshot = await getDocs(q);
-    return { success: true, data: snapshot.docs.map(d => ({ id: d.id, ...d.data() })) };
   } catch (error) {
     return { success: false, error: error.message };
   }
