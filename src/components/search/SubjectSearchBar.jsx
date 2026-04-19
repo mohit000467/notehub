@@ -1,8 +1,7 @@
 // src/components/search/SubjectSearchBar.jsx
-// Search bar with live subject suggestions + case-insensitive matching
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
 import { getAllSubjects, filterSubjects } from "../../services/searchService";
 
 const SubjectSearchBar = () => {
@@ -10,26 +9,24 @@ const SubjectSearchBar = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const wrapperRef = useRef(null);
 
   // Fetch all subjects once on mount
   useEffect(() => {
-    const fetchSubjects = async () => {
-      setLoading(true);
-      const subjects = await getAllSubjects();
-      setAllSubjects(subjects);
-      setLoading(false);
-    };
-    fetchSubjects();
+    getAllSubjects().then(setAllSubjects);
   }, []);
 
   // Filter suggestions as user types
   useEffect(() => {
+    if (query.trim() === "") {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
     const filtered = filterSubjects(allSubjects, query);
     setSuggestions(filtered);
-    setShowDropdown(filtered.length > 0 && query.trim() !== "");
+    setShowDropdown(filtered.length > 0);
   }, [query, allSubjects]);
 
   // Close dropdown on outside click
@@ -43,64 +40,44 @@ const SubjectSearchBar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = (searchQuery) => {
-    const trimmed = (searchQuery || query).trim();
+  // Navigate to subject page
+  const goToSubject = (value) => {
+    const trimmed = value.trim();
     if (!trimmed) return;
     setShowDropdown(false);
-    // Navigate with lowercase so URL is consistent
     navigate(`/subject/${encodeURIComponent(trimmed.toLowerCase())}`);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleSearch();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    goToSubject(query);
   };
 
   const handleSuggestionClick = (subject) => {
     setQuery(subject);
-    handleSearch(subject);
+    setShowDropdown(false);
+    navigate(`/subject/${encodeURIComponent(subject.toLowerCase())}`);
   };
 
   return (
     <div ref={wrapperRef} style={{ position: "relative", width: "100%" }}>
-      {/* Search Input */}
-      <div style={{ display: "flex", gap: "8px" }}>
+      <form onSubmit={handleSubmit} className="relative">
+        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => {
-            if (suggestions.length > 0) setShowDropdown(true);
-          }}
-          placeholder="🔍 Search by subject (e.g. OS, DBMS, DSA)..."
-          style={{
-            flex: 1,
-            padding: "12px 16px",
-            fontSize: "16px",
-            border: "2px solid #e2e8f0",
-            borderRadius: "10px",
-            outline: "none",
-            transition: "border-color 0.2s",
-          }}
-          onMouseOver={(e) => (e.target.style.borderColor = "#667eea")}
-          onMouseOut={(e) => (e.target.style.borderColor = "#e2e8f0")}
+          onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+          placeholder="Search by subject..."
+          className="w-full bg-surface-card border border-surface-border rounded-xl pl-10 pr-24 py-3.5 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 focus:ring-1 focus:ring-ink-500/30 transition-all"
         />
         <button
-          onClick={() => handleSearch()}
-          style={{
-            padding: "12px 24px",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "white",
-            border: "none",
-            borderRadius: "10px",
-            fontSize: "16px",
-            cursor: "pointer",
-            fontWeight: "600",
-          }}
+          type="submit"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink-500 hover:bg-ink-400 text-white text-xs font-semibold rounded-lg transition-colors"
         >
           Search
         </button>
-      </div>
+      </form>
 
       {/* Suggestions Dropdown */}
       {showDropdown && (
@@ -110,69 +87,44 @@ const SubjectSearchBar = () => {
             top: "calc(100% + 4px)",
             left: 0,
             right: 0,
-            background: "white",
-            border: "1px solid #e2e8f0",
+            background: "#1e293b",
+            border: "1px solid #334155",
             borderRadius: "10px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
+            boxShadow: "0 8px 25px rgba(0,0,0,0.3)",
             zIndex: 1000,
             overflow: "hidden",
           }}
         >
-          <div
-            style={{
-              padding: "6px 12px",
-              fontSize: "11px",
-              color: "#94a3b8",
-              background: "#f8fafc",
-              borderBottom: "1px solid #e2e8f0",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            Subjects found
+          <div style={{ padding: "6px 12px", fontSize: "11px", color: "#64748b", borderBottom: "1px solid #334155", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Suggestions
           </div>
           {suggestions.map((subject, i) => (
             <div
               key={i}
-              onClick={() => handleSuggestionClick(subject)}
+              onMouseDown={() => handleSuggestionClick(subject)}
               style={{
                 padding: "10px 16px",
                 cursor: "pointer",
-                fontSize: "15px",
-                color: "#1e293b",
-                borderBottom:
-                  i < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
+                fontSize: "14px",
+                color: "#e2e8f0",
+                borderBottom: i < suggestions.length - 1 ? "1px solid #1e293b" : "none",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                transition: "background 0.15s",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#f0f4ff")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "white")
-              }
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#334155")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <span style={{ color: "#667eea" }}>📚</span>
-              {/* Highlight matching part */}
+              <span>📚</span>
               {highlightMatch(subject, query)}
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Loading hint */}
-      {loading && (
-        <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
-          Loading subjects...
         </div>
       )}
     </div>
   );
 };
 
-// Highlight the matching part of the suggestion
 const highlightMatch = (text, query) => {
   if (!query) return text;
   const index = text.toLowerCase().indexOf(query.toLowerCase());
@@ -180,9 +132,7 @@ const highlightMatch = (text, query) => {
   return (
     <>
       {text.slice(0, index)}
-      <strong style={{ color: "#667eea" }}>
-        {text.slice(index, index + query.length)}
-      </strong>
+      <strong style={{ color: "#818cf8" }}>{text.slice(index, index + query.length)}</strong>
       {text.slice(index + query.length)}
     </>
   );
