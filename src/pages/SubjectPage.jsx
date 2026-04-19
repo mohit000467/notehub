@@ -4,23 +4,32 @@ import { useParams, useNavigate } from "react-router-dom";
 import { BookOpen, ArrowLeft, Tag, FileText } from "lucide-react";
 import { getNotesBySubject } from "../services/notesService";
 import NoteCard from "../components/notes/NoteCard";
-import SortFilter from "../components/notes/SortFilter";
 import { NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
 
 const SubjectPage = () => {
-  // ✅ FIX: subjectName — original param name
   const { subjectName } = useParams();
   const navigate = useNavigate();
-
-  // ✅ FIX: case-insensitive decode
   const decoded = decodeURIComponent(subjectName || "");
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("createdAt");
   const [activeTag, setActiveTag] = useState(null);
+  const [unitFilter, setUnitFilter] = useState("all");
 
   const allTags = [...new Set(notes.flatMap((n) => n.tags || []))];
+
+  // Extract unit numbers from note titles
+  const allUnits = ["all", ...Array.from(
+    new Set(
+      notes
+        .map((n) => {
+          const match = n.title?.toLowerCase().match(/unit\s*(\d+)/);
+          return match ? `unit ${match[1]}` : null;
+        })
+        .filter(Boolean)
+    )
+  ).sort()];
 
   useEffect(() => {
     if (decoded) fetchNotes(sortBy);
@@ -28,17 +37,20 @@ const SubjectPage = () => {
 
   const fetchNotes = async (sort) => {
     setLoading(true);
-    // ✅ FIX: pass lowercase so Firestore query is consistent
     const result = await getNotesBySubject(decoded.toLowerCase(), sort);
     if (result.success) setNotes(result.data);
     setLoading(false);
   };
 
-  const filtered = activeTag
-    ? notes.filter((n) => n.tags?.includes(activeTag))
-    : notes;
+  // Apply tag + unit filter
+  const filtered = notes
+    .filter((n) => !activeTag || n.tags?.includes(activeTag))
+    .filter((n) => {
+      if (unitFilter === "all") return true;
+      const match = n.title?.toLowerCase().match(/unit\s*(\d+)/);
+      return match ? `unit ${match[1]}` === unitFilter : false;
+    });
 
-  // ✅ FIX: display nicely capitalized
   const displayName = decoded
     .split(" ")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -68,12 +80,33 @@ const SubjectPage = () => {
             {loading ? "Loading..." : `${filtered.length} note${filtered.length !== 1 ? "s" : ""} found`}
           </p>
         </div>
-        <SortFilter sortBy={sortBy} onChange={setSortBy} />
+
+        {/* Sort buttons */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: "createdAt", label: "🕐 Latest" },
+            { key: "downloadCount", label: "⬇️ Most Downloaded" },
+            { key: "rating", label: "⭐ Top Rated" },
+          ].map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setSortBy(s.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                sortBy === s.key
+                  ? "bg-ink-500 border-ink-500 text-white"
+                  : "border-surface-border text-gray-500 hover:text-white hover:border-ink-600"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tags filter */}
       {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-3">
+          <span className="text-xs text-gray-600 self-center">Tags:</span>
           <button
             onClick={() => setActiveTag(null)}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all ${
@@ -95,6 +128,26 @@ const SubjectPage = () => {
               }`}
             >
               {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Unit filter — only show if units detected */}
+      {allUnits.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className="text-xs text-gray-600 self-center">Unit:</span>
+          {allUnits.map((unit) => (
+            <button
+              key={unit}
+              onClick={() => setUnitFilter(unit)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-all capitalize ${
+                unitFilter === unit
+                  ? "bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan"
+                  : "border-surface-border text-gray-500 hover:text-white"
+              }`}
+            >
+              {unit === "all" ? "All Units" : unit.replace("unit ", "Unit ")}
             </button>
           ))}
         </div>
