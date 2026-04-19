@@ -1,7 +1,7 @@
 // src/pages/HomePage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, BookOpen, Users, Download, Sparkles } from "lucide-react";
+import { BookOpen, Users, Download, Sparkles, LogIn } from "lucide-react";
 import { getRecentNotes, getAllSubjects } from "../services/notesService";
 import { getUserByUniqueId } from "../services/userService";
 import NoteCard from "../components/notes/NoteCard";
@@ -50,11 +50,50 @@ const HomePage = () => {
     }
   };
 
+  // ── LOGGED OUT: Simple landing page ──────────────────────
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
+        <div className="inline-flex items-center gap-2 text-xs font-mono text-ink-400 bg-ink-500/10 border border-ink-500/20 px-3 py-1.5 rounded-full mb-6">
+          <Sparkles size={12} />
+          Academic Notes Sharing Platform
+        </div>
+
+        <h1 className="text-4xl sm:text-5xl font-display font-bold text-white mb-4 leading-tight">
+          Find, Share & Download{" "}
+          <span className="gradient-text">Academic Notes</span>
+        </h1>
+
+        <p className="text-gray-500 text-lg max-w-xl mx-auto mb-10">
+          A collaborative platform for students to share subject-wise notes.
+          Sign in to search, upload, and download notes.
+        </p>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => navigate("/login")}
+            className="flex items-center gap-2 px-6 py-3 bg-ink-500 hover:bg-ink-400 text-white font-semibold rounded-xl transition-colors"
+          >
+            <LogIn size={18} />
+            Sign In
+          </button>
+          <button
+            onClick={() => navigate("/signup")}
+            className="px-6 py-3 border border-surface-border hover:border-ink-500 text-gray-400 hover:text-white font-semibold rounded-xl transition-colors"
+          >
+            Create Account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── LOGGED IN: Full dashboard ─────────────────────────────
   const totalNotes = subjects.reduce((sum, s) => sum + s.count, 0);
 
   return (
     <div className="page-enter">
-      {/* ── Hero ─────────────────────────────────────────── */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-ink-500/8 blur-[100px] rounded-full" />
@@ -90,13 +129,10 @@ const HomePage = () => {
             ))}
           </div>
 
-          {/* ── Dual Search Bars ── */}
+          {/* Dual Search Bars */}
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-
-            {/* Subject Search — with autocomplete */}
             <SubjectSearchBar />
 
-            {/* User ID Search — unchanged */}
             <form onSubmit={handleUserSearch} className="relative">
               <Users size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
@@ -115,8 +151,8 @@ const HomePage = () => {
             </form>
           </div>
 
-          {/* Logged in user ka quick info */}
-          {isAuthenticated && userProfile && (
+          {/* User's shareable ID */}
+          {userProfile && (
             <div className="mt-6 inline-flex items-center gap-3 bg-surface-card border border-surface-border rounded-xl px-4 py-2.5">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
@@ -144,7 +180,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ── Popular Subjects ── */}
+      {/* Popular Subjects */}
       {subjects.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
@@ -154,9 +190,7 @@ const HomePage = () => {
             {subjects.slice(0, 12).map((subject) => (
               <button
                 key={subject.subject}
-                onClick={() =>
-                  navigate(`/subject/${encodeURIComponent(subject.subject)}`)
-                }
+                onClick={() => navigate(`/subject/${encodeURIComponent(subject.subject)}`)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-surface-card border border-surface-border hover:border-ink-600 hover:bg-surface-hover rounded-lg text-sm text-gray-400 hover:text-white transition-all group"
               >
                 <BookOpen size={13} className="text-ink-500 group-hover:text-ink-400" />
@@ -170,7 +204,7 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* ── Recently Uploaded ── */}
+      {/* Recently Uploaded */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-display font-semibold text-white">
@@ -180,7 +214,7 @@ const HomePage = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid:cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => <NoteCardSkeleton key={i} />)}
           </div>
         ) : recentNotes.length === 0 ? (
