@@ -7,12 +7,12 @@ import { getUserByUniqueId } from "../services/userService";
 import NoteCard from "../components/notes/NoteCard";
 import { NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
 import { useAuth } from "../context/AuthContext";
+import SubjectSearchBar from "../components/search/SubjectSearchBar";
 import toast from "react-hot-toast";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, userProfile } = useAuth();
-  const [subjectQuery, setSubjectQuery] = useState("");
   const [userQuery, setUserQuery] = useState("");
   const [recentNotes, setRecentNotes] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -33,12 +33,6 @@ const HomePage = () => {
     if (subjectsResult.success)
       setSubjects(subjectsResult.data.sort((a, b) => b.count - a.count));
     setLoading(false);
-  };
-
-  const handleSubjectSearch = (e) => {
-    e.preventDefault();
-    if (!subjectQuery.trim()) return;
-    navigate(`/subject/${encodeURIComponent(subjectQuery.trim().toLowerCase())}`);
   };
 
   const handleUserSearch = async (e) => {
@@ -96,24 +90,13 @@ const HomePage = () => {
             ))}
           </div>
 
-          {/* ── Dual Search Bars — always visible ── */}
+          {/* ── Dual Search Bars ── */}
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <form onSubmit={handleSubjectSearch} className="relative">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
-              <input
-                value={subjectQuery}
-                onChange={(e) => setSubjectQuery(e.target.value)}
-                placeholder="Search by subject..."
-                className="w-full bg-surface-card border border-surface-border rounded-xl pl-10 pr-24 py-3.5 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 focus:ring-1 focus:ring-ink-500/30 transition-all"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink-500 hover:bg-ink-400 text-white text-xs font-semibold rounded-lg transition-colors"
-              >
-                Search
-              </button>
-            </form>
 
+            {/* Subject Search — with autocomplete */}
+            <SubjectSearchBar />
+
+            {/* User ID Search — unchanged */}
             <form onSubmit={handleUserSearch} className="relative">
               <Users size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
@@ -197,7 +180,7 @@ const HomePage = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid:cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => <NoteCardSkeleton key={i} />)}
           </div>
         ) : recentNotes.length === 0 ? (
