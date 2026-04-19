@@ -1,43 +1,54 @@
 // src/context/AuthContext.jsx
-// ============================================================
-// Global authentication state using React Context
-// Wraps the entire app to provide user state everywhere
-// ============================================================
-
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { getUserById } from "../services/userService";
 
 const AuthContext = createContext(null);
 
+// ⏱️ 30 minute inactivity ke baad logout
+const TIMEOUT_DURATION = 30 * 60 * 1000;
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);   // Firebase Auth user
-  const [userProfile, setUserProfile] = useState(null);   // Firestore user data
-  const [loading, setLoading] = useState(true);           // Initial auth check
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const timerRef = useRef(null);
 
+  // Timer reset karo jab bhi user kuch kare
+  const resetTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      await signOut(auth);
+    }, TIMEOUT_DURATION);
+  };
+
+  // User activity track karo
   useEffect(() => {
-    // Listen for auth state changes (login, logout, page refresh)
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-
-      if (user) {
-        // Fetch full profile from Firestore
-        const result = await getUserById(user.uid);
-        if (result.success) {
-          setUserProfile(result.data);
-        }
-      } else {
-        setUserProfile(null);
-      }
-
-      setLoading(false);
-    });
-
-    return () => unsubscribe(); // Cleanup on unmount
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    events.forEach((e) => window.addEventListener(e, resetTimer));
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
-  // Refresh profile (call this after updating profile data)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      if (user) {
+        const result = await getUserById(user.uid);
+        if (result.success) setUserProfile(result.data);
+        resetTimer(); // Login hote hi timer start
+      } else {
+        setUserProfile(null);
+        if (timerRef.current) clearTimeout(timerRef.current);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const refreshProfile = async () => {
     if (currentUser) {
       const result = await getUserById(currentUser.uid);
@@ -60,7 +71,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook for easy access
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within AuthProvider");
