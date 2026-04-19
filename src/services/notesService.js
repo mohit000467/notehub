@@ -37,13 +37,13 @@ const uploadToCloudinary = async (file, onProgress) => {
   });
 };
 
-export const uploadNote = async (noteData, file, userId, username, onProgress) => {
+export const uploadNote = async (noteData, file, userId, username, uploaderName: username, onProgress) => {
   try {
     const { fileURL, publicId } = await uploadToCloudinary(file, onProgress);
     const fileExtension = file.name.split(".").pop();
 
     const noteDoc = await addDoc(collection(db, "notes"), {
-      userId, username,
+      userId, username, uploaderName: username,
       subject: noteData.subject.trim().toLowerCase(),
       subjectDisplay: noteData.subject.trim(),
       title: noteData.title.trim(),

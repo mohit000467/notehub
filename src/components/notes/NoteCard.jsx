@@ -105,7 +105,7 @@ const NoteCard = ({ note, onRatingUpdate }) => {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600 mb-4">
         <span className="flex items-center gap-1">
           <User size={12} />
-          {note.username}
+          {note.uploaderName || note.username || "Anonymous"}
         </span>
         <span className="flex items-center gap-1">
           <Calendar size={12} />
