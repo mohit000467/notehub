@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Upload, FileText, Download, Star, Trash2, AlertTriangle,
-  BookOpen, Search, Users, Copy,
+  BookOpen, Users, Copy, Search,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getNotesByUser, deleteNote } from "../services/notesService";
 import { getUserByUniqueId } from "../services/userService";
 import { NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
-import { formatDate, getFileTypeLabel, formatFileSize } from "../utils/helpers";
+import { formatDate, getFileTypeLabel } from "../utils/helpers";
+import SubjectSearchBar from "../components/search/SubjectSearchBar";
 import toast from "react-hot-toast";
 
 const StatCard = ({ icon: Icon, label, value, color = "text-ink-400", bg = "bg-ink-500/10" }) => (
@@ -32,9 +33,6 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-
-  // Search states
-  const [subjectQuery, setSubjectQuery] = useState("");
   const [userQuery, setUserQuery] = useState("");
   const [userSearching, setUserSearching] = useState(false);
 
@@ -49,14 +47,12 @@ const DashboardPage = () => {
     setLoading(false);
   };
 
-  // Stats
   const totalDownloads = notes.reduce((sum, n) => sum + (n.downloadCount || 0), 0);
   const ratedNotes = notes.filter((n) => n.ratingCount > 0);
   const avgRating = ratedNotes.length
     ? (ratedNotes.reduce((s, n) => s + n.rating, 0) / ratedNotes.length).toFixed(1)
     : "—";
 
-  // Delete
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -71,14 +67,6 @@ const DashboardPage = () => {
     setDeleteTarget(null);
   };
 
-  // Subject search
-  const handleSubjectSearch = (e) => {
-    e.preventDefault();
-    if (!subjectQuery.trim()) return;
-    navigate(`/subject/${encodeURIComponent(subjectQuery.trim().toLowerCase())}`);
-  };
-
-  // User ID search
   const handleUserSearch = async (e) => {
     e.preventDefault();
     if (!userQuery.trim()) return;
@@ -97,7 +85,7 @@ const DashboardPage = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 page-enter">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-display font-bold text-white">Dashboard</h1>
@@ -114,7 +102,7 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* ── Unique ID Card ── */}
+      {/* Unique ID Card */}
       <div className="bg-ink-500/5 border border-ink-500/20 rounded-xl px-5 py-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <p className="text-xs text-gray-500 mb-1">Your Unique ID (share to be found)</p>
@@ -139,28 +127,15 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ── Search Section ── */}
+      {/* Search Section */}
       <div className="bg-surface-card border border-surface-border rounded-xl p-5 mb-6">
         <p className="text-sm font-semibold text-gray-400 mb-4 flex items-center gap-2">
           <Search size={14} /> Search
         </p>
         <div className="grid sm:grid-cols-2 gap-3">
-          {/* Subject Search */}
-          <form onSubmit={handleSubjectSearch} className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
-            <input
-              value={subjectQuery}
-              onChange={(e) => setSubjectQuery(e.target.value)}
-              placeholder="Search notes by subject..."
-              className="w-full bg-surface-elevated border border-surface-border rounded-lg pl-9 pr-20 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 transition-all"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 bg-ink-500 hover:bg-ink-400 text-white text-xs font-semibold rounded-md transition-colors"
-            >
-              Search
-            </button>
-          </form>
+
+          {/* ✅ Subject Search — with autocomplete suggestions */}
+          <SubjectSearchBar />
 
           {/* User ID Search */}
           <form onSubmit={handleUserSearch} className="relative">
@@ -182,7 +157,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ── Stats ── */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard icon={FileText} label="Total Uploads" value={notes.length} />
         <StatCard icon={Download} label="Total Downloads" value={totalDownloads}
@@ -193,7 +168,7 @@ const DashboardPage = () => {
           color="text-accent-green" bg="bg-accent-green/10" />
       </div>
 
-      {/* ── My Uploads Table ── */}
+      {/* My Uploads Table */}
       <div>
         <h2 className="text-lg font-display font-semibold text-white mb-4">My Uploads</h2>
 
@@ -205,7 +180,7 @@ const DashboardPage = () => {
           <div className="text-center py-16 border border-surface-border rounded-2xl bg-surface-card">
             <BookOpen size={40} className="text-gray-700 mx-auto mb-3" />
             <p className="text-gray-400 font-medium mb-1">No notes uploaded yet</p>
-            <p className="text-sm text-gray-600 mb-5">Start sharing your knowledge with the community!</p>
+            <p className="text-sm text-gray-600 mb-5">Start sharing your knowledge!</p>
             <button
               onClick={() => navigate("/upload")}
               className="px-5 py-2.5 bg-ink-500 hover:bg-ink-400 text-white font-semibold rounded-xl transition-colors"
@@ -215,7 +190,6 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden">
-            {/* Table Header */}
             <div className="grid grid-cols-12 px-4 py-3 border-b border-surface-border text-xs font-semibold text-gray-500 uppercase tracking-wide">
               <div className="col-span-5">Note</div>
               <div className="col-span-2 hidden sm:block">Subject</div>
@@ -224,7 +198,6 @@ const DashboardPage = () => {
               <div className="col-span-1 text-center">Del</div>
             </div>
 
-            {/* Table Rows */}
             {notes.map((note, idx) => {
               const ft = getFileTypeLabel(note.fileType);
               return (
@@ -234,7 +207,6 @@ const DashboardPage = () => {
                     idx !== notes.length - 1 ? "border-b border-surface-border" : ""
                   }`}
                 >
-                  {/* Title */}
                   <div className="col-span-5 flex items-center gap-3 min-w-0">
                     <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded flex-shrink-0 ${ft.color}`}>
                       {ft.label}
@@ -244,29 +216,19 @@ const DashboardPage = () => {
                       <p className="text-xs text-gray-600">{formatDate(note.createdAt)}</p>
                     </div>
                   </div>
-
-                  {/* Subject */}
                   <div className="col-span-2 hidden sm:block">
                     <span className="text-xs text-gray-400 bg-surface-border px-2 py-1 rounded">
                       {note.subjectDisplay}
                     </span>
                   </div>
-
-                  {/* Downloads */}
                   <div className="col-span-2 text-center">
-                    <span className="text-sm font-semibold text-accent-cyan">
-                      {note.downloadCount || 0}
-                    </span>
+                    <span className="text-sm font-semibold text-accent-cyan">{note.downloadCount || 0}</span>
                   </div>
-
-                  {/* Rating */}
                   <div className="col-span-2 text-center">
                     <span className="text-sm font-semibold text-accent-amber">
                       {note.rating > 0 ? `⭐ ${note.rating}` : "—"}
                     </span>
                   </div>
-
-                  {/* Delete */}
                   <div className="col-span-1 flex justify-center">
                     <button
                       onClick={() => setDeleteTarget(note)}
@@ -282,10 +244,10 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* ── Delete Confirm Modal ── */}
+      {/* Delete Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-card border border-surface-border rounded-2xl p-6 max-w-sm w-full animate-slide-up">
+          <div className="bg-surface-card border border-surface-border rounded-2xl p-6 max-w-sm w-full">
             <div className="w-12 h-12 bg-red-400/10 rounded-xl flex items-center justify-center mb-4">
               <AlertTriangle size={24} className="text-red-400" />
             </div>
