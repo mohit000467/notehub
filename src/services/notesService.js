@@ -37,7 +37,7 @@ const uploadToCloudinary = async (file, onProgress) => {
   });
 };
 
-export const uploadNote = async (noteData, file, userId, username, uploaderName: username, onProgress) => {
+export const uploadNote = async (noteData, file, userId, username, onProgress) => {
   try {
     const { fileURL, publicId } = await uploadToCloudinary(file, onProgress);
     const fileExtension = file.name.split(".").pop();
