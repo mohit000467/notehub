@@ -28,15 +28,28 @@ const NoteCard = ({ note, onRatingUpdate }) => {
   const handleDownload = async () => {
     try {
       setDownloading(true);
-      // Open file in new tab (browser handles download)
-      window.open(note.fileURL, "_blank");
+
+      // Force download using fetch + blob
+      const response = await fetch(note.fileURL);
+      if (!response.ok) throw new Error("Failed to fetch file");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = note.fileName || `${note.title}.${note.fileType || "pdf"}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
 
       // Track download count
       await incrementDownload(note.id);
       await updateUserDownloads(note.userId);
       setLocalDownloads((prev) => prev + 1);
     } catch (err) {
-      toast.error("Download failed. Try again.");
+      // Fallback: open in new tab
+      window.open(note.fileURL, "_blank");
+      toast("Opening in new tab...", { icon: "📄" });
     } finally {
       setDownloading(false);
     }
