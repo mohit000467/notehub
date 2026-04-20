@@ -14,6 +14,11 @@ const uploadToCloudinary = async (file, onProgress) => {
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
   formData.append("folder", "notehub_notes");
 
+  // Choose resource type based on file type
+  const imageTypes = ["jpg", "jpeg", "png", "gif", "webp"];
+  const ext = file.name.split(".").pop().toLowerCase();
+  const resourceType = imageTypes.includes(ext) ? "image" : "raw";
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.upload.addEventListener("progress", (e) => {
@@ -22,11 +27,13 @@ const uploadToCloudinary = async (file, onProgress) => {
     xhr.addEventListener("load", () => {
       if (xhr.status === 200) {
         const res = JSON.parse(xhr.responseText);
-        resolve({ fileURL: res.secure_url, publicId: res.public_id });
+        // Add fl_attachment flag to force download instead of preview
+        const downloadURL = res.secure_url.replace("/upload/", "/upload/fl_attachment/");
+        resolve({ fileURL: downloadURL, publicId: res.public_id });
       } else reject(new Error("Cloudinary upload failed"));
     });
     xhr.addEventListener("error", () => reject(new Error("Upload failed")));
-    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`);
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`);
     xhr.send(formData);
   });
 };
