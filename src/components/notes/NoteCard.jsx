@@ -29,27 +29,29 @@ const NoteCard = ({ note, onRatingUpdate }) => {
     try {
       setDownloading(true);
 
-      // Force download using fetch + blob
-      const response = await fetch(note.fileURL);
-      if (!response.ok) throw new Error("Failed to fetch file");
+      // Fetch file as blob and force download — works for ALL formats
+      const response = await fetch(note.fileURL, { mode: "cors" });
+      if (!response.ok) throw new Error("Fetch failed");
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
+      a.href = blobUrl;
       a.download = note.fileName || `${note.title}.${note.fileType || "pdf"}`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
 
-      // Track download count
       await incrementDownload(note.id);
       await updateUserDownloads(note.userId);
       setLocalDownloads((prev) => prev + 1);
+      toast.success("Downloaded! ✅");
     } catch (err) {
-      // Fallback: open in new tab
+      // CORS fallback — open in new tab
       window.open(note.fileURL, "_blank");
-      toast("Opening in new tab...", { icon: "📄" });
+      await incrementDownload(note.id);
+      await updateUserDownloads(note.userId);
+      setLocalDownloads((prev) => prev + 1);
     } finally {
       setDownloading(false);
     }

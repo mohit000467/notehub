@@ -28,12 +28,11 @@ const uploadToCloudinary = async (file, onProgress) => {
       if (xhr.status === 200) {
         const res = JSON.parse(xhr.responseText);
         // Add fl_attachment flag to force download instead of preview
-        const downloadURL = res.secure_url.replace("/upload/", "/upload/fl_attachment/");
-        resolve({ fileURL: downloadURL, publicId: res.public_id });
+        resolve({ fileURL: res.secure_url, publicId: res.public_id });
       } else reject(new Error("Cloudinary upload failed"));
     });
     xhr.addEventListener("error", () => reject(new Error("Upload failed")));
-    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`);
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`);
     xhr.send(formData);
   });
 };
