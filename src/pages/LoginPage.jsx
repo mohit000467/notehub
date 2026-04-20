@@ -29,11 +29,7 @@ const LoginPage = () => {
     filter: 'blur(1px)',
   }));
 
-  const stats = [
-    { icon: FileText, label: "Notes Shared",   value: "500+" },
-    { icon: Users,    label: "Students",        value: "200+" },
-    { icon: Download, label: "Downloads",       value: "1K+"  },
-  ];
+  
 
   return (
     <div className="min-h-screen auth-bg flex overflow-hidden relative">
@@ -69,15 +65,7 @@ const LoginPage = () => {
           </p>
 
           {/* Stats */}
-          <div className="flex gap-8">
-            {stats.map(({ icon: Icon, label, value }) => (
-              <div key={label} className="glass-card rounded-2xl px-5 py-4">
-                <Icon size={18} className="text-ink-400 mb-2" />
-                <p className="text-2xl font-display font-bold text-white">{value}</p>
-                <p className="text-xs text-gray-500">{label}</p>
-              </div>
-            ))}
-          </div>
+          
         </div>
 
         {/* Bottom tagline */}
