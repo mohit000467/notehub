@@ -1,7 +1,7 @@
-// src/pages/HomePage.jsx
+// src/pages/HomePage.jsx — Glassmorphism Edition
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Users, Download, Sparkles, LogIn } from "lucide-react";
+import { BookOpen, Users, Download, Sparkles, LogIn, Search, ArrowRight } from "lucide-react";
 import { getRecentNotes, getAllSubjects } from "../services/notesService";
 import { getUserByUniqueId } from "../services/userService";
 import NoteCard from "../components/notes/NoteCard";
@@ -13,15 +13,13 @@ import toast from "react-hot-toast";
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, userProfile } = useAuth();
-  const [userQuery, setUserQuery] = useState("");
+  const [userQuery, setUserQuery]     = useState("");
   const [recentNotes, setRecentNotes] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [subjects, setSubjects]       = useState([]);
+  const [loading, setLoading]         = useState(true);
   const [userSearching, setUserSearching] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -41,66 +39,114 @@ const HomePage = () => {
     setUserSearching(true);
     const result = await getUserByUniqueId(userQuery.trim());
     setUserSearching(false);
-    if (result.success) {
-      navigate(`/profile/${result.data.userId}`);
-    } else if (result.isPrivate) {
-      toast.error("This profile is set to private 🔒");
-    } else {
-      toast.error("No user found with this ID");
-    }
+    if (result.success)          navigate(`/profile/${result.data.userId}`);
+    else if (result.isPrivate)   toast.error("This profile is private 🔒");
+    else                         toast.error("No user found with this ID");
   };
 
-  // ── LOGGED OUT: Simple landing page ──────────────────────
+  // ── NOT LOGGED IN ─────────────────────────────────────────
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <div className="inline-flex items-center gap-2 text-xs font-mono text-ink-400 bg-ink-500/10 border border-ink-500/20 px-3 py-1.5 rounded-full mb-6">
-          <Sparkles size={12} />
-          Academic Notes Sharing Platform
-        </div>
+      <div className="min-h-screen hero-bg flex flex-col items-center justify-center px-4 text-center relative overflow-hidden">
 
-        <h1 className="text-4xl sm:text-5xl font-display font-bold text-white mb-4 leading-tight">
-          Find, Share & Download{" "}
-          <span className="gradient-text">Academic Notes</span>
-        </h1>
+        {/* Particles */}
+        {Array.from({ length: 12 }, (_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: `${Math.random() * 4 + 2}px`,
+              height: `${Math.random() * 4 + 2}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: i % 3 === 0 ? "rgba(108,138,255,0.5)" : i % 3 === 1 ? "rgba(167,139,250,0.4)" : "rgba(45,212,191,0.35)",
+              animation: `orbFloat ${9 + Math.random() * 8}s ease-in-out infinite alternate`,
+              animationDelay: `${Math.random() * 4}s`,
+              filter: "blur(1px)",
+            }}
+          />
+        ))}
 
-        <p className="text-gray-500 text-lg max-w-xl mx-auto mb-10">
-          A collaborative platform for students to share subject-wise notes.
-          Sign in to search, upload, and download notes.
-        </p>
-
-        <div className="flex gap-4">
-          <button
-            onClick={() => navigate("/login")}
-            className="flex items-center gap-2 px-6 py-3 bg-ink-500 hover:bg-ink-400 text-white font-semibold rounded-xl transition-colors"
+        <div className="relative z-10 stagger max-w-3xl mx-auto">
+          {/* Badge */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono mb-8"
+            style={{
+              background: "rgba(108,138,255,0.08)",
+              border: "1px solid rgba(108,138,255,0.2)",
+              color: "rgba(108,138,255,0.9)",
+            }}
           >
-            <LogIn size={18} />
-            Sign In
-          </button>
-          <button
-            onClick={() => navigate("/signup")}
-            className="px-6 py-3 border border-surface-border hover:border-ink-500 text-gray-400 hover:text-white font-semibold rounded-xl transition-colors"
-          >
-            Create Account
-          </button>
+            <Sparkles size={12} />
+            Academic Notes Sharing Platform
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-5xl sm:text-6xl font-display font-bold text-white mb-6 leading-tight">
+            Find, Share &{" "}
+            <span className="gradient-text">Download</span>
+            <br />Academic Notes
+          </h1>
+
+          <p className="text-xl leading-relaxed mb-12 max-w-xl mx-auto" style={{ color: "var(--text-secondary)" }}>
+            A collaborative platform for students to share subject-wise notes.
+            Sign in to search, upload, and connect.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <button
+              onClick={() => navigate("/login")}
+              className="btn-primary btn-glow flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl text-base"
+            >
+              <LogIn size={18} />
+              Sign In
+            </button>
+            <button
+              onClick={() => navigate("/signup")}
+              className="glass-btn flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl text-base font-semibold"
+            >
+              Create Account
+              <ArrowRight size={16} />
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="flex justify-center gap-6">
+            {[
+              { icon: BookOpen, label: "Notes",     value: recentNotes.length || "500+" },
+              { icon: Users,    label: "Students",  value: "200+" },
+              { icon: Download, label: "Downloads", value: "2K+"  },
+            ].map(({ icon: Icon, label, value }) => (
+              <div
+                key={label}
+                className="glass-card rounded-2xl px-6 py-4 text-center min-w-[100px]"
+              >
+                <Icon size={18} className="mx-auto mb-2" style={{ color: "var(--accent)" }} />
+                <div className="text-2xl font-display font-bold text-white">{value}</div>
+                <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  // ── LOGGED IN: Full dashboard ─────────────────────────────
+  // ── LOGGED IN ─────────────────────────────────────────────
   const totalNotes = subjects.reduce((sum, s) => sum + s.count, 0);
 
   return (
     <div className="page-enter">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-ink-500/8 blur-[100px] rounded-full" />
-        </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-12 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-ink-400 bg-ink-500/10 border border-ink-500/20 px-3 py-1.5 rounded-full mb-6">
+      {/* ── Hero ── */}
+      <section className="hero-bg relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-14 text-center relative z-10">
+
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono mb-6"
+            style={{ background: "rgba(108,138,255,0.08)", border: "1px solid rgba(108,138,255,0.18)", color: "rgba(108,138,255,0.9)" }}
+          >
             <Sparkles size={12} />
             Academic Notes Sharing Platform
           </div>
@@ -109,69 +155,82 @@ const HomePage = () => {
             Find, Share & Download{" "}
             <span className="gradient-text">Academic Notes</span>
           </h1>
-          <p className="text-gray-500 text-lg max-w-2xl mx-auto mb-10">
-            A collaborative platform for students to share subject-wise notes.
-            Search by subject or find a student by their unique ID.
+
+          <p className="text-lg max-w-2xl mx-auto mb-10" style={{ color: "var(--text-secondary)" }}>
+            A collaborative platform for students to share subject-wise notes. Search by subject or find a student by their unique ID.
           </p>
 
           {/* Stats */}
-          <div className="flex justify-center gap-8 mb-10">
+          <div className="flex justify-center gap-10 mb-10">
             {[
-              { icon: BookOpen, label: "Notes", value: totalNotes },
-              { icon: Users, label: "Subjects", value: subjects.length },
-              { icon: Download, label: "Downloads", value: "∞" },
+              { icon: BookOpen, label: "Notes",    value: totalNotes },
+              { icon: Users,    label: "Subjects", value: subjects.length },
+              { icon: Download, label: "Downloads",value: "∞" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="text-center">
-                <Icon size={20} className="text-ink-400 mx-auto mb-1" />
-                <div className="text-xl font-display font-bold text-white">{value}</div>
-                <div className="text-xs text-gray-600">{label}</div>
+                <Icon size={18} className="mx-auto mb-1.5" style={{ color: "var(--accent)" }} />
+                <div className="text-2xl font-display font-bold text-white">{value}</div>
+                <div className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</div>
               </div>
             ))}
           </div>
 
-          {/* Dual Search Bars */}
+          {/* Search Bars */}
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <SubjectSearchBar />
+            <SubjectSearchBar glassy />
 
             <form onSubmit={handleUserSearch} className="relative">
-              <Users size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
+              <Users size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
               <input
                 value={userQuery}
                 onChange={(e) => setUserQuery(e.target.value.toUpperCase())}
                 placeholder="User ID (USR-XXXXXX)"
-                className="w-full bg-surface-card border border-surface-border rounded-xl pl-10 pr-24 py-3.5 text-sm text-white placeholder-gray-600 font-mono outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan/20 transition-all"
+                className="glass-input w-full rounded-xl pl-10 pr-24 py-3.5 text-sm font-mono"
               />
               <button
                 type="submit"
                 disabled={userSearching}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan text-xs font-semibold rounded-lg transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: "rgba(45,212,191,0.12)",
+                  border: "1px solid rgba(45,212,191,0.25)",
+                  color: "rgba(45,212,191,0.9)",
+                }}
               >
                 {userSearching ? "..." : "Find"}
               </button>
             </form>
           </div>
 
-          {/* User's shareable ID */}
+          {/* User ID chip */}
           {userProfile && (
-            <div className="mt-6 inline-flex items-center gap-3 bg-surface-card border border-surface-border rounded-xl px-4 py-2.5">
+            <div
+              className="mt-6 inline-flex items-center gap-3 rounded-2xl px-4 py-2.5"
+              style={{
+                background: "rgba(108,138,255,0.07)",
+                border: "1px solid rgba(108,138,255,0.15)",
+              }}
+            >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                style={{ backgroundColor: userProfile.avatarColor || "#3a5aff" }}
+                style={{ backgroundColor: userProfile.avatarColor || "#6c8aff", boxShadow: "0 0 10px rgba(108,138,255,0.4)" }}
               >
                 {userProfile.username?.[0]?.toUpperCase()}
               </div>
               <div className="text-left">
-                <p className="text-xs text-gray-500">Your shareable ID</p>
-                <p className="text-sm font-mono font-semibold text-ink-300">
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Your shareable ID</p>
+                <p className="text-sm font-mono font-semibold" style={{ color: "rgba(108,138,255,0.9)" }}>
                   {userProfile.uniqueId}
                 </p>
               </div>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(userProfile.uniqueId);
-                  toast.success("ID copied!");
+                onClick={() => { navigator.clipboard.writeText(userProfile.uniqueId); toast.success("Copied!"); }}
+                className="text-xs px-2.5 py-1 rounded-lg transition-all"
+                style={{
+                  background: "rgba(108,138,255,0.1)",
+                  border: "1px solid rgba(108,138,255,0.2)",
+                  color: "rgba(108,138,255,0.8)",
                 }}
-                className="text-xs text-gray-600 hover:text-gray-300 border border-surface-border rounded px-2 py-1 transition-colors"
               >
                 Copy
               </button>
@@ -180,22 +239,39 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Popular Subjects */}
+      {/* ── Popular Subjects ── */}
       {subjects.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <h2 className="text-xs font-mono font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--text-muted)" }}>
             Popular Subjects
           </h2>
           <div className="flex flex-wrap gap-2">
-            {subjects.slice(0, 12).map((subject) => (
+            {subjects.slice(0, 14).map((subject) => (
               <button
                 key={subject.subject}
                 onClick={() => navigate(`/subject/${encodeURIComponent(subject.subject)}`)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-surface-card border border-surface-border hover:border-ink-600 hover:bg-surface-hover rounded-lg text-sm text-gray-400 hover:text-white transition-all group"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm transition-all card-lift"
+                style={{
+                  background: "rgba(15,18,32,0.7)",
+                  border: "1px solid rgba(108,138,255,0.1)",
+                  color: "var(--text-secondary)",
+                  backdropFilter: "blur(12px)",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = "white";
+                  e.currentTarget.style.borderColor = "rgba(108,138,255,0.3)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                  e.currentTarget.style.borderColor = "rgba(108,138,255,0.1)";
+                }}
               >
-                <BookOpen size={13} className="text-ink-500 group-hover:text-ink-400" />
+                <BookOpen size={13} style={{ color: "var(--accent)" }} />
                 {subject.subjectDisplay}
-                <span className="text-xs text-gray-600 bg-surface-border px-1.5 py-0.5 rounded font-mono">
+                <span
+                  className="text-xs font-mono px-1.5 py-0.5 rounded"
+                  style={{ background: "rgba(108,138,255,0.1)", color: "var(--text-muted)" }}
+                >
                   {subject.count}
                 </span>
               </button>
@@ -204,13 +280,11 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* Recently Uploaded */}
+      {/* ── Recently Uploaded ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-display font-semibold text-white">
-            Recently Uploaded
-          </h2>
-          <span className="text-xs text-gray-600 font-mono">Latest contributions</span>
+          <h2 className="text-lg font-display font-semibold text-white">Recently Uploaded</h2>
+          <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>Latest contributions</span>
         </div>
 
         {loading ? (
@@ -218,16 +292,16 @@ const HomePage = () => {
             {[...Array(8)].map((_, i) => <NoteCardSkeleton key={i} />)}
           </div>
         ) : recentNotes.length === 0 ? (
-          <div className="text-center py-20 border border-surface-border rounded-2xl bg-surface-card">
-            <BookOpen size={40} className="text-gray-700 mx-auto mb-3" />
-            <p className="text-gray-500">No notes uploaded yet.</p>
-            <p className="text-sm text-gray-600">Be the first to contribute! 🚀</p>
+          <div
+            className="glass-card text-center py-20 rounded-2xl"
+          >
+            <BookOpen size={40} className="mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
+            <p style={{ color: "var(--text-secondary)" }}>No notes uploaded yet.</p>
+            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>Be the first to contribute! 🚀</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {recentNotes.map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
+            {recentNotes.map((note) => <NoteCard key={note.id} note={note} />)}
           </div>
         )}
       </section>

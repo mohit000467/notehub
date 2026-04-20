@@ -1,10 +1,6 @@
-// src/components/notes/NoteCard.jsx
-// ============================================================
-// Reusable card component for displaying a note
-// ============================================================
-
+// src/components/notes/NoteCard.jsx — Glassmorphism Edition
 import React, { useState } from "react";
-import { Download, Star, Calendar, User, Tag, FileText } from "lucide-react";
+import { Download, Star, Calendar, User, Tag } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { incrementDownload } from "../../services/notesService";
 import { updateUserDownloads } from "../../services/userService";
@@ -16,20 +12,27 @@ const NoteCard = ({ note, onRatingUpdate }) => {
   const { currentUser, isAuthenticated } = useAuth();
   const [downloading, setDownloading] = useState(false);
   const [localDownloads, setLocalDownloads] = useState(note.downloadCount || 0);
-  const [localRating, setLocalRating] = useState(note.rating || 0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [hasRated] = useState(
-    note.ratedBy?.includes(currentUser?.uid) || false
-  );
+  const [localRating, setLocalRating]   = useState(note.rating || 0);
+  const [hoverRating, setHoverRating]   = useState(0);
+  const [hasRated] = useState(note.ratedBy?.includes(currentUser?.uid) || false);
 
   const fileType = getFileTypeLabel(note.fileType);
 
-  // ── DOWNLOAD ─────────────────────────────────────────────
+  // File type color map — glass tinted
+  const ftGlass = {
+    PDF:  { bg: "rgba(251,113,133,0.1)",  border: "rgba(251,113,133,0.25)",  text: "#fb7185" },
+    DOC:  { bg: "rgba(108,138,255,0.1)",  border: "rgba(108,138,255,0.25)",  text: "#6c8aff" },
+    DOCX: { bg: "rgba(108,138,255,0.1)",  border: "rgba(108,138,255,0.25)",  text: "#6c8aff" },
+    IMG:  { bg: "rgba(74,222,128,0.1)",   border: "rgba(74,222,128,0.25)",   text: "#4ade80" },
+    PPT:  { bg: "rgba(251,191,36,0.1)",   border: "rgba(251,191,36,0.25)",   text: "#fbbf24" },
+    PPTX: { bg: "rgba(251,191,36,0.1)",   border: "rgba(251,191,36,0.25)",   text: "#fbbf24" },
+    FILE: { bg: "rgba(107,114,128,0.1)",  border: "rgba(107,114,128,0.25)",  text: "#9ca3af" },
+  };
+  const ftStyle = ftGlass[fileType.label] || ftGlass.FILE;
+
   const handleDownload = async () => {
     try {
       setDownloading(true);
-
-      // Fetch file as blob and force download — works for ALL formats
       const response = await fetch(note.fileURL, { mode: "cors" });
       if (!response.ok) throw new Error("Fetch failed");
       const blob = await response.blob();
@@ -41,133 +44,155 @@ const NoteCard = ({ note, onRatingUpdate }) => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
-
       await incrementDownload(note.id);
       await updateUserDownloads(note.userId);
-      setLocalDownloads((prev) => prev + 1);
+      setLocalDownloads((p) => p + 1);
       toast.success("Downloaded! ✅");
-    } catch (err) {
-      // CORS fallback — open in new tab
+    } catch {
       window.open(note.fileURL, "_blank");
       await incrementDownload(note.id);
       await updateUserDownloads(note.userId);
-      setLocalDownloads((prev) => prev + 1);
+      setLocalDownloads((p) => p + 1);
     } finally {
       setDownloading(false);
     }
   };
 
-  // ── RATING ───────────────────────────────────────────────
   const handleRate = async (rating) => {
-    if (!isAuthenticated) {
-      toast.error("Sign in to rate notes");
-      return;
-    }
-    if (hasRated) {
-      toast("You've already rated this note", { icon: "ℹ️" });
-      return;
-    }
-    if (currentUser.uid === note.userId) {
-      toast.error("You can't rate your own note");
-      return;
-    }
-
+    if (!isAuthenticated)          { toast.error("Sign in to rate notes"); return; }
+    if (hasRated)                  { toast("Already rated!", { icon: "ℹ️" }); return; }
+    if (currentUser.uid === note.userId) { toast.error("Can't rate your own note"); return; }
     const result = await rateNote(note.id, currentUser.uid, rating);
     if (result.success) {
       setLocalRating(result.newRating);
       toast.success("Rating submitted! ⭐");
       if (onRatingUpdate) onRatingUpdate(note.id, result.newRating);
-    } else {
-      toast.error(result.error);
-    }
+    } else toast.error(result.error);
   };
 
   return (
-    <div className="bg-surface-card border border-surface-border rounded-xl p-5 hover:border-ink-700 hover:shadow-glow transition-all duration-200 group animate-fade-in">
-      {/* Header Row */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {/* File type badge */}
-            <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${fileType.color}`}>
-              {fileType.label}
-            </span>
-            {/* Tags */}
-            {note.tags?.slice(0, 2).map((tag) => (
+    <div
+      className="card-lift group relative rounded-2xl overflow-hidden"
+      style={{
+        background: "linear-gradient(145deg, rgba(15,18,32,0.75) 0%, rgba(10,12,20,0.65) 100%)",
+        backdropFilter: "blur(28px) saturate(160%)",
+        WebkitBackdropFilter: "blur(28px) saturate(160%)",
+        border: "1px solid rgba(108,138,255,0.1)",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+      }}
+    >
+      {/* Top shine line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px opacity-60 group-hover:opacity-100 transition-opacity"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(108,138,255,0.5), rgba(167,139,250,0.3), transparent)" }}
+      />
+
+      {/* Hover glow bg */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,138,255,0.06), transparent)" }}
+      />
+
+      <div className="relative z-10 p-5">
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {/* File type badge */}
               <span
-                key={tag}
-                className="text-xs text-ink-400 bg-ink-500/10 px-2 py-0.5 rounded flex items-center gap-1"
+                className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg"
+                style={{
+                  background: ftStyle.bg,
+                  border: `1px solid ${ftStyle.border}`,
+                  color: ftStyle.text,
+                }}
               >
-                <Tag size={10} />
-                {tag}
+                {fileType.label}
               </span>
-            ))}
+              {/* Tags */}
+              {note.tags?.slice(0, 2).map((tag) => (
+                <span key={tag} className="tag-pill flex items-center gap-1">
+                  <Tag size={9} />
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <h3
+              className="font-display font-semibold text-base leading-snug truncate transition-colors"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {note.title}
+            </h3>
           </div>
-          <h3 className="font-display font-semibold text-white text-base leading-snug group-hover:text-ink-300 transition-colors truncate">
-            {note.title}
-          </h3>
         </div>
+
+        {/* Description */}
+        {note.description && (
+          <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
+            {truncate(note.description, 110)}
+          </p>
+        )}
+
+        {/* Divider */}
+        <div className="gradient-divider mb-3" />
+
+        {/* Meta */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mb-4" style={{ color: "var(--text-muted)" }}>
+          <span className="flex items-center gap-1.5">
+            <User size={11} style={{ color: "var(--accent)" }} />
+            {note.uploaderName || note.username || "Anonymous"}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Calendar size={11} />
+            {formatDate(note.createdAt)}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Download size={11} />
+            {localDownloads}
+          </span>
+        </div>
+
+        {/* Stars */}
+        <div className="flex items-center gap-1 mb-4">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              onClick={() => handleRate(star)}
+              onMouseEnter={() => !hasRated && setHoverRating(star)}
+              onMouseLeave={() => setHoverRating(0)}
+              className="focus:outline-none transition-transform hover:scale-125 active:scale-95"
+            >
+              <Star
+                size={14}
+                className={star <= (hoverRating || Math.round(localRating)) ? "star-active" : "star-inactive"}
+              />
+            </button>
+          ))}
+          <span className="text-xs ml-1.5" style={{ color: "var(--text-muted)" }}>
+            {localRating > 0 ? `${localRating} (${note.ratingCount || 0})` : "No ratings"}
+          </span>
+        </div>
+
+        {/* Download Button */}
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="btn-glow w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: downloading
+              ? "rgba(108,138,255,0.08)"
+              : "linear-gradient(135deg, rgba(108,138,255,0.15) 0%, rgba(167,139,250,0.1) 100%)",
+            border: "1px solid rgba(108,138,255,0.25)",
+            color: downloading ? "rgba(108,138,255,0.5)" : "rgba(108,138,255,0.95)",
+          }}
+        >
+          <Download
+            size={15}
+            className={downloading ? "animate-bounce" : ""}
+          />
+          {downloading ? "Downloading..." : "Download"}
+        </button>
       </div>
-
-      {/* Description */}
-      {note.description && (
-        <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-          {truncate(note.description, 120)}
-        </p>
-      )}
-
-      {/* Meta Row */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600 mb-4">
-        <span className="flex items-center gap-1">
-          <User size={12} />
-          {note.uploaderName || note.username || "Anonymous"}
-        </span>
-        <span className="flex items-center gap-1">
-          <Calendar size={12} />
-          {formatDate(note.createdAt)}
-        </span>
-        <span className="flex items-center gap-1">
-          <Download size={12} />
-          {localDownloads} downloads
-        </span>
-      </div>
-
-      {/* Star Rating */}
-      <div className="flex items-center gap-1 mb-4">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            onClick={() => handleRate(star)}
-            onMouseEnter={() => !hasRated && setHoverRating(star)}
-            onMouseLeave={() => setHoverRating(0)}
-            className="transition-transform hover:scale-110 focus:outline-none"
-          >
-            <Star
-              size={15}
-              className={
-                star <= (hoverRating || Math.round(localRating))
-                  ? "star-active"
-                  : "star-inactive"
-              }
-            />
-          </button>
-        ))}
-        <span className="text-xs text-gray-500 ml-1">
-          {localRating > 0
-            ? `${localRating} (${note.ratingCount || 0})`
-            : "No ratings"}
-        </span>
-      </div>
-
-      {/* Download Button */}
-      <button
-        onClick={handleDownload}
-        disabled={downloading}
-        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-ink-500/15 hover:bg-ink-500/30 border border-ink-500/30 hover:border-ink-400/50 text-ink-300 hover:text-white rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Download size={15} className={downloading ? "animate-bounce" : ""} />
-        {downloading ? "Opening..." : "Download"}
-      </button>
     </div>
   );
 };

@@ -1,89 +1,109 @@
-// src/pages/LoginPage.jsx
-import React, { useEffect, useRef } from "react";
-import { Navigate, Link } from "react-router-dom";
+// src/pages/LoginPage.jsx — Glassmorphism Edition
+import React from "react";
+import { Navigate } from "react-router-dom";
 import { BookOpen, Sparkles, FileText, Users, Download } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import AuthForm from "../components/auth/AuthForm";
-
-// Floating particle
-const Particle = ({ style }) => (
-  <div className="absolute rounded-full pointer-events-none" style={style} />
-);
 
 const LoginPage = () => {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
-  const particles = Array.from({ length: 18 }, (_, i) => ({
-    width:  `${Math.random() * 4 + 2}px`,
-    height: `${Math.random() * 4 + 2}px`,
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    width:  `${Math.random() * 5 + 2}px`,
+    height: `${Math.random() * 5 + 2}px`,
     left:   `${Math.random() * 100}%`,
     top:    `${Math.random() * 100}%`,
     background: i % 3 === 0
-      ? 'rgba(108,138,255,0.5)'
+      ? "rgba(108,138,255,0.6)"
       : i % 3 === 1
-      ? 'rgba(167,139,250,0.4)'
-      : 'rgba(45,212,191,0.35)',
-    animation: `orbFloat ${8 + Math.random() * 8}s ease-in-out infinite alternate`,
-    animationDelay: `${Math.random() * 4}s`,
-    filter: 'blur(1px)',
+      ? "rgba(167,139,250,0.5)"
+      : "rgba(45,212,191,0.4)",
+    animation: `orbFloat ${9 + Math.random() * 9}s ease-in-out infinite alternate`,
+    animationDelay: `${Math.random() * 5}s`,
+    filter: "blur(1.5px)",
+    borderRadius: "50%",
+    position: "absolute",
   }));
 
-  
+  const stats = [
+    { icon: FileText, label: "Notes Shared",    value: "500+" },
+    { icon: Users,    label: "Active Students", value: "200+" },
+    { icon: Download, label: "Downloads",        value: "2K+"  },
+  ];
 
   return (
     <div className="min-h-screen auth-bg flex overflow-hidden relative">
 
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((p, i) => <Particle key={i} style={p} />)}
+        {particles.map((p, i) => <div key={i} style={p} />)}
       </div>
 
-      {/* ── LEFT PANEL — branding ─────────────────────── */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] px-14 py-12 relative z-10">
+      {/* ── LEFT PANEL ── */}
+      <div className="hidden lg:flex flex-col justify-between w-[46%] px-14 py-12 relative z-10">
 
         {/* Logo */}
         <div className="auth-logo-enter flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-ink-500 flex items-center justify-center pulse-ring">
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center pulse-ring"
+            style={{ background: "linear-gradient(135deg, #6c8aff, #5570f0)", boxShadow: "0 8px 24px rgba(108,138,255,0.4)" }}
+          >
             <BookOpen size={20} className="text-white" />
           </div>
           <span className="font-display font-bold text-2xl text-white">NoteHub</span>
         </div>
 
-        {/* Hero text */}
+        {/* Hero content */}
         <div className="stagger">
-          <div className="flex items-center gap-2 mb-6">
-            <Sparkles size={14} className="text-ink-400" />
-            <span className="text-xs font-mono text-ink-400 tracking-wider uppercase">Academic Notes Platform</span>
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono mb-8"
+            style={{ background: "rgba(108,138,255,0.1)", border: "1px solid rgba(108,138,255,0.2)", color: "rgba(108,138,255,0.9)" }}
+          >
+            <Sparkles size={12} />
+            Academic Notes Platform
           </div>
+
           <h1 className="text-5xl font-display font-bold text-white leading-tight mb-6">
             Share Knowledge,{" "}
             <span className="gradient-text">Grow Together</span>
           </h1>
-          <p className="text-gray-500 text-lg leading-relaxed mb-10 max-w-md">
+
+          <p className="text-lg leading-relaxed mb-12 max-w-md" style={{ color: "var(--text-secondary)" }}>
             Upload, discover and download academic notes. Connect with students across subjects and units.
           </p>
 
-          {/* Stats */}
-          
+          {/* Stats row */}
+          <div className="flex gap-4">
+            {stats.map(({ icon: Icon, label, value }) => (
+              <div
+                key={label}
+                className="glass-card rounded-2xl px-5 py-4 flex-1 text-center"
+              >
+                <Icon size={18} className="mx-auto mb-2" style={{ color: "var(--accent)" }} />
+                <p className="text-xl font-display font-bold text-white">{value}</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Bottom tagline */}
-        <p className="text-xs text-gray-600 font-mono">
+        <p className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
           © 2026 NoteHub · Built for students
         </p>
       </div>
 
-      {/* ── RIGHT PANEL — auth form ───────────────────── */}
+      {/* ── RIGHT PANEL ── */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
-
-        {/* Glass card */}
         <div className="auth-card-enter glass-card rounded-3xl p-8 w-full max-w-md">
 
           {/* Mobile logo */}
-          <div className="flex lg:hidden items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-ink-500 flex items-center justify-center">
-              <BookOpen size={16} className="text-white" />
+          <div className="flex lg:hidden items-center gap-3 mb-8">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #6c8aff, #5570f0)", boxShadow: "0 4px 16px rgba(108,138,255,0.35)" }}
+            >
+              <BookOpen size={17} className="text-white" />
             </div>
             <span className="font-display font-bold text-xl text-white">NoteHub</span>
           </div>
