@@ -429,32 +429,38 @@ const AdminDashboard = () => {
   };
 
   // ── Block confirm ────────────────────────────────────────────
-  const confirmBlock = async () => {
-    if (!blockTarget) return;
-    setActionLoading(true);
-    const result = await adminBlockUser(blockTarget.user.id);
-    setActionLoading(false);
-    if (result.success) {
-      setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: true } : u));
-      if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: true }));
-      toast.success(`User "${blockTarget.user.username}" blocked 🚫`);
-    } else toast.error("Block failed");
-    setBlockTarget(null);
-  };
+  
+const confirmBlock = async () => {
+  if (!blockTarget) return;
+  setActionLoading(true);
+  const result = await adminBlockUser(blockTarget.user.id);
+  setActionLoading(false);
+  if (result.success) {
+    setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: true } : u));
+    if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: true }));
+    // ✅ Stats real-time update
+    setStats((prev) => ({ ...prev, blockedUsers: (prev?.blockedUsers || 0) + 1 }));
+    toast.success(`User "${blockTarget.user.username}" blocked 🚫`);
+  } else toast.error("Block failed");
+  setBlockTarget(null);
+};
 
   // ── Unblock confirm ──────────────────────────────────────────
-  const confirmUnblock = async () => {
-    if (!blockTarget) return;
-    setActionLoading(true);
-    const result = await adminUnblockUser(blockTarget.user.id);
-    setActionLoading(false);
-    if (result.success) {
-      setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: false } : u));
-      if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: false }));
-      toast.success(`User "${blockTarget.user.username}" unblocked ✅`);
-    } else toast.error("Unblock failed");
-    setBlockTarget(null);
-  };
+  
+const confirmUnblock = async () => {
+  if (!blockTarget) return;
+  setActionLoading(true);
+  const result = await adminUnblockUser(blockTarget.user.id);
+  setActionLoading(false);
+  if (result.success) {
+    setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: false } : u));
+    if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: false }));
+    // ✅ Stats real-time update
+    setStats((prev) => ({ ...prev, blockedUsers: Math.max((prev?.blockedUsers || 0) - 1, 0) }));
+    toast.success(`User "${blockTarget.user.username}" unblocked ✅`);
+  } else toast.error("Unblock failed");
+  setBlockTarget(null);
+};
 
   // ── Trigger handlers (open modals) ───────────────────────────
   const handleBlock = (user) => setBlockTarget({ action: "block", user });
