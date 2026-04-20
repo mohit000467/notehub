@@ -8,9 +8,11 @@ import {
 import { useAuth } from "../context/AuthContext";
 import {
   getAllUsers, getAllNotes, adminDeleteNote,
-  getPlatformStats, isAdminUser, ADMIN_PASSWORD,
+  getPlatformStats, isAdminUser, ADMIN_PASSWORD, ADMIN_EMAIL,
 } from "../services/adminService";
 import { formatDate, getFileTypeLabel } from "../utils/helpers";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../services/firebase";
 import toast from "react-hot-toast";
 
 // ── Password Gate ─────────────────────────────────────────────
@@ -18,6 +20,9 @@ const AdminLoginGate = ({ onSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [show, setShow] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -30,6 +35,19 @@ const AdminLoginGate = ({ onSuccess }) => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    setForgotLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, ADMIN_EMAIL);
+      setForgotSent(true);
+      toast.success("Reset link sent to your email! 📧");
+    } catch (err) {
+      toast.error("Failed to send reset email. Try again.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface-base flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -38,7 +56,7 @@ const AdminLoginGate = ({ onSuccess }) => {
             <Shield size={24} className="text-red-400" />
           </div>
           <h1 className="text-xl font-display font-bold text-white text-center mb-1">Admin Access</h1>
-          <p className="text-xs text-gray-500 text-center mb-6 font-mono">mohitsingh97941111@gmail.com</p>
+          <p className="text-xs text-gray-500 text-center mb-6 font-mono">{ADMIN_EMAIL}</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
@@ -68,6 +86,23 @@ const AdminLoginGate = ({ onSuccess }) => {
               Access Admin Panel
             </button>
           </form>
+
+          {/* Forgot Password */}
+          <div className="mt-4 text-center">
+            {forgotSent ? (
+              <p className="text-xs text-accent-green">
+                ✅ Reset link sent to {ADMIN_EMAIL}
+              </p>
+            ) : (
+              <button
+                onClick={handleForgotPassword}
+                disabled={forgotLoading}
+                className="text-xs text-gray-500 hover:text-ink-400 transition-colors disabled:opacity-50"
+              >
+                {forgotLoading ? "Sending..." : "Forgot admin password?"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
