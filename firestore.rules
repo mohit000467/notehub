@@ -1,27 +1,43 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ── Helper: check if requester is admin ──────────────────
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.email == "mohitsingh97941111@gmail.com";
+    }
+
+    // ── USERS COLLECTION ─────────────────────────────────────
     match /users/{userId} {
-      allow read: if resource.data.profileVisibility == 'public'
+      // Admin can read ALL users regardless of visibility
+      // Normal users: only public profiles or own profile
+      allow read: if isAdmin()
+                  || resource.data.profileVisibility == 'public'
                   || request.auth.uid == userId;
       allow create: if request.auth != null && request.auth.uid == userId;
       allow update: if request.auth != null && request.auth.uid == userId;
       allow delete: if false;
     }
+
+    // ── NOTES COLLECTION ─────────────────────────────────────
     match /notes/{noteId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Admin can read + delete ANY note
+      allow read:   if true;
+      allow delete: if isAdmin()
+                    || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
       allow update: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['rating', 'ratingSum', 'ratingCount', 'ratedBy', 'downloadCount'])
+        resource.data.userId == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['rating', 'ratingSum', 'ratingCount', 'ratedBy', 'downloadCount'])
       );
     }
-    // Admin config — only admin email can read/write
+
+    // ── ADMIN CONFIG — only admin can read/write ──────────────
     match /config/{docId} {
-      allow read, write: if request.auth != null
-                         && request.auth.token.email == "mohitsingh97941111@gmail.com";
+      allow read, write: if isAdmin();
     }
   }
 }
