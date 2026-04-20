@@ -1,55 +1,27 @@
-// firestore.rules
-// ============================================================
-// Firestore Security Rules
-// Deploy with: firebase deploy --only firestore:rules
-// ============================================================
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ── USERS COLLECTION ─────────────────────────────────────
     match /users/{userId} {
-      // Anyone can read public profiles
       allow read: if resource.data.profileVisibility == 'public'
                   || request.auth.uid == userId;
-
-      // Only authenticated user can create their own doc
-      allow create: if request.auth != null
-                    && request.auth.uid == userId;
-
-      // Only owner can update their own profile
-      allow update: if request.auth != null
-                    && request.auth.uid == userId;
-
-      // No deletion of user profiles
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
       allow delete: if false;
     }
-
-    // ── NOTES COLLECTION ──────────────────────────────────────
     match /notes/{noteId} {
-      // Anyone can read notes
       allow read: if true;
-
-      // Only authenticated users can create notes
-      allow create: if request.auth != null
-                    && request.resource.data.userId == request.auth.uid;
-
-      // Only the owner can delete their note
-      allow delete: if request.auth != null
-                    && resource.data.userId == request.auth.uid;
-
-      // Updates allowed for:
-      // - Owner (can update anything)
-      // - Any authenticated user (for downloadCount, rating, ratedBy)
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow update: if request.auth != null && (
-        resource.data.userId == request.auth.uid
-        || (
-          // Allow rating updates — only these fields
-          request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['rating', 'ratingSum', 'ratingCount', 'ratedBy', 'downloadCount'])
-        )
+        resource.data.userId == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['rating', 'ratingSum', 'ratingCount', 'ratedBy', 'downloadCount'])
       );
+    }
+    // Admin config — only admin email can read/write
+    match /config/{docId} {
+      allow read, write: if request.auth != null
+                         && request.auth.token.email == "mohitsingh97941111@gmail.com";
     }
   }
 }

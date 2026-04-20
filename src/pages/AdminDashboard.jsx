@@ -3,30 +3,104 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, FileText, Download, Star, Trash2, AlertTriangle,
-  Search, Shield, ChevronDown, ChevronUp, X, Eye, Lock,
+  Search, Shield, ChevronDown, ChevronUp, X, Eye, EyeOff,
+  Lock, Settings, CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
-  getAllUsers, getAllNotes, adminDeleteNote,
-  getPlatformStats, isAdminUser, ADMIN_PASSWORD, ADMIN_EMAIL,
+  getAllUsers, getAllNotes, adminDeleteNote, getPlatformStats,
+  isAdminUser, ADMIN_EMAIL, getAdminPassword, setAdminPassword,
 } from "../services/adminService";
-import { formatDate, getFileTypeLabel } from "../utils/helpers";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../services/firebase";
+import { formatDate, getFileTypeLabel } from "../utils/helpers";
 import toast from "react-hot-toast";
 
+// ── Set Password Screen (first time setup) ────────────────────
+const SetPasswordScreen = ({ onDone }) => {
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSet = async (e) => {
+    e.preventDefault();
+    if (newPass.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (newPass !== confirmPass) { setError("Passwords don't match"); return; }
+    setLoading(true);
+    const result = await setAdminPassword(newPass);
+    setLoading(false);
+    if (result.success) {
+      toast.success("Admin password set! 🔐");
+      onDone(newPass);
+    } else {
+      setError("Failed to save. Try again.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface-base flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="bg-surface-card border border-surface-border rounded-2xl p-8">
+          <div className="w-12 h-12 bg-ink-500/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <Shield size={24} className="text-ink-400" />
+          </div>
+          <h1 className="text-xl font-display font-bold text-white text-center mb-1">Set Admin Password</h1>
+          <p className="text-xs text-gray-500 text-center mb-2 font-mono">{ADMIN_EMAIL}</p>
+          <p className="text-xs text-gray-600 text-center mb-6">First time setup — set your admin panel password. This is separate from your Firebase login password.</p>
+
+          <form onSubmit={handleSet} className="space-y-4">
+            <div className="relative">
+              <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+              <input type={show ? "text" : "password"} value={newPass}
+                onChange={(e) => { setNewPass(e.target.value); setError(""); }}
+                placeholder="New admin password"
+                className="w-full bg-surface-elevated border border-surface-border rounded-xl pl-9 pr-10 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 transition-all"
+                autoFocus />
+              <button type="button" onClick={() => setShow(!show)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300">
+                {show ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+
+            <div className="relative">
+              <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+              <input type={show ? "text" : "password"} value={confirmPass}
+                onChange={(e) => { setConfirmPass(e.target.value); setError(""); }}
+                placeholder="Confirm password"
+                className="w-full bg-surface-elevated border border-surface-border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 transition-all" />
+            </div>
+
+            {error && <p className="text-xs text-red-400 flex items-center gap-1"><AlertTriangle size={12} /> {error}</p>}
+
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-ink-500 hover:bg-ink-400 text-white font-semibold rounded-xl transition-colors text-sm disabled:opacity-60">
+              {loading ? "Saving..." : "Set Password & Enter"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Password Gate ─────────────────────────────────────────────
-const AdminLoginGate = ({ onSuccess }) => {
+const AdminLoginGate = ({ onSuccess, correctPassword }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [show, setShow] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [showChangePass, setShowChangePass] = useState(false);
+  const [newPass, setNewPass] = useState("");
+  const [confirmNewPass, setConfirmNewPass] = useState("");
+  const [changeLoading, setChangeLoading] = useState(false);
+  const [changeError, setChangeError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    if (password === correctPassword) {
       sessionStorage.setItem("admin_auth", "true");
       onSuccess();
     } else {
@@ -40,13 +114,72 @@ const AdminLoginGate = ({ onSuccess }) => {
     try {
       await sendPasswordResetEmail(auth, ADMIN_EMAIL);
       setForgotSent(true);
-      toast.success("Reset link sent to your email! 📧");
+      toast.success("Firebase reset link sent! Check email 📧");
     } catch (err) {
-      toast.error("Failed to send reset email. Try again.");
+      toast.error("Failed to send reset email.");
     } finally {
       setForgotLoading(false);
     }
   };
+
+  const handleChangeAdminPass = async (e) => {
+    e.preventDefault();
+    if (newPass.length < 6) { setChangeError("Min 6 characters"); return; }
+    if (newPass !== confirmNewPass) { setChangeError("Passwords don't match"); return; }
+    setChangeLoading(true);
+    const result = await setAdminPassword(newPass);
+    setChangeLoading(false);
+    if (result.success) {
+      toast.success("Admin panel password updated! 🔐");
+      setShowChangePass(false);
+      setNewPass(""); setConfirmNewPass(""); setChangeError("");
+      window.location.reload();
+    } else {
+      setChangeError("Failed. Try again.");
+    }
+  };
+
+  if (showChangePass) {
+    return (
+      <div className="min-h-screen bg-surface-base flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-surface-card border border-surface-border rounded-2xl p-8">
+            <button onClick={() => setShowChangePass(false)}
+              className="text-xs text-gray-500 hover:text-white mb-6 flex items-center gap-1 transition-colors">
+              ← Back
+            </button>
+            <h1 className="text-xl font-display font-bold text-white mb-1">Change Admin Password</h1>
+            <p className="text-xs text-gray-500 mb-6">This changes your admin panel password only — not your Firebase login.</p>
+            <form onSubmit={handleChangeAdminPass} className="space-y-4">
+              <div className="relative">
+                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                <input type={show ? "text" : "password"} value={newPass}
+                  onChange={(e) => { setNewPass(e.target.value); setChangeError(""); }}
+                  placeholder="New admin panel password" autoFocus
+                  className="w-full bg-surface-elevated border border-surface-border rounded-xl pl-9 pr-10 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 transition-all" />
+                <button type="button" onClick={() => setShow(!show)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300">
+                  {show ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                <input type={show ? "text" : "password"} value={confirmNewPass}
+                  onChange={(e) => { setConfirmNewPass(e.target.value); setChangeError(""); }}
+                  placeholder="Confirm new password"
+                  className="w-full bg-surface-elevated border border-surface-border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 transition-all" />
+              </div>
+              {changeError && <p className="text-xs text-red-400 flex items-center gap-1"><AlertTriangle size={12} /> {changeError}</p>}
+              <button type="submit" disabled={changeLoading}
+                className="w-full py-3 bg-ink-500 hover:bg-ink-400 text-white font-semibold rounded-xl transition-colors text-sm disabled:opacity-60">
+                {changeLoading ? "Updating..." : "Update Password"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface-base flex items-center justify-center px-4">
@@ -61,25 +194,18 @@ const AdminLoginGate = ({ onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
-              <input
-                type={show ? "text" : "password"}
-                value={password}
+              <input type={show ? "text" : "password"} value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                placeholder="Enter admin password"
+                placeholder="Enter admin panel password"
                 className="w-full bg-surface-elevated border border-surface-border rounded-xl pl-9 pr-10 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-ink-500 transition-all"
-                autoFocus
-              />
+                autoFocus />
               <button type="button" onClick={() => setShow(!show)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300">
-                <Eye size={14} />
+                {show ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
 
-            {error && (
-              <p className="text-xs text-red-400 flex items-center gap-1">
-                <AlertTriangle size={12} /> {error}
-              </p>
-            )}
+            {error && <p className="text-xs text-red-400 flex items-center gap-1"><AlertTriangle size={12} /> {error}</p>}
 
             <button type="submit"
               className="w-full py-3 bg-ink-500 hover:bg-ink-400 text-white font-semibold rounded-xl transition-colors text-sm">
@@ -87,19 +213,20 @@ const AdminLoginGate = ({ onSuccess }) => {
             </button>
           </form>
 
-          {/* Forgot Password */}
-          <div className="mt-4 text-center">
+          {/* Options */}
+          <div className="mt-5 pt-4 border-t border-surface-border flex flex-col gap-2">
+            <button onClick={() => setShowChangePass(true)}
+              className="flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-ink-400 transition-colors">
+              <Settings size={12} /> Change admin panel password
+            </button>
             {forgotSent ? (
-              <p className="text-xs text-accent-green">
-                ✅ Reset link sent to {ADMIN_EMAIL}
+              <p className="text-xs text-accent-green text-center flex items-center justify-center gap-1">
+                <CheckCircle size={12} /> Firebase reset link sent to email!
               </p>
             ) : (
-              <button
-                onClick={handleForgotPassword}
-                disabled={forgotLoading}
-                className="text-xs text-gray-500 hover:text-ink-400 transition-colors disabled:opacity-50"
-              >
-                {forgotLoading ? "Sending..." : "Forgot admin password?"}
+              <button onClick={handleForgotPassword} disabled={forgotLoading}
+                className="text-xs text-gray-500 hover:text-gray-400 transition-colors disabled:opacity-50 text-center">
+                {forgotLoading ? "Sending..." : "Forgot Firebase login password?"}
               </button>
             )}
           </div>
@@ -127,10 +254,8 @@ const AdminDashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  const [authed, setAuthed] = useState(
-    sessionStorage.getItem("admin_auth") === "true"
-  );
-
+  const [authState, setAuthState] = useState("loading"); // loading | setup | gate | authed
+  const [correctPassword, setCorrectPassword] = useState("");
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -146,8 +271,22 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
     if (!isAdminUser(currentUser.email)) { toast.error("Access denied"); navigate("/"); return; }
-    if (authed) loadData();
-  }, [currentUser, authed]);
+    checkPassword();
+  }, [currentUser]);
+
+  const checkPassword = async () => {
+    const result = await getAdminPassword();
+    if (result.notSet) {
+      setAuthState("setup");
+    } else if (result.success) {
+      setCorrectPassword(result.password);
+      const alreadyAuthed = sessionStorage.getItem("admin_auth") === "true";
+      setAuthState(alreadyAuthed ? "authed" : "gate");
+      if (alreadyAuthed) loadData();
+    } else {
+      setAuthState("gate");
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -163,7 +302,7 @@ const AdminDashboard = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const result = await adminDeleteNote(deleteTarget.id, deleteTarget.publicId);
+    const result = await adminDeleteNote(deleteTarget.id);
     setDeleting(false);
     if (result.success) {
       setNotes(prev => prev.filter(n => n.id !== deleteTarget.id));
@@ -172,13 +311,38 @@ const AdminDashboard = () => {
     setDeleteTarget(null);
   };
 
-  const handleLogout = () => {
+  const handleLockPanel = () => {
     sessionStorage.removeItem("admin_auth");
-    setAuthed(false);
+    setAuthState("gate");
   };
 
-  // Show password gate if not authed
-  if (!authed) return <AdminLoginGate onSuccess={() => setAuthed(true)} />;
+  if (authState === "loading") return (
+    <div className="min-h-screen bg-surface-base flex items-center justify-center">
+      <Shield size={40} className="text-ink-500 animate-pulse" />
+    </div>
+  );
+
+  if (authState === "setup") return (
+    <SetPasswordScreen onDone={(pass) => {
+      setCorrectPassword(pass);
+      sessionStorage.setItem("admin_auth", "true");
+      setAuthState("authed");
+      loadData();
+    }} />
+  );
+
+  if (authState === "gate") return (
+    <AdminLoginGate correctPassword={correctPassword} onSuccess={() => { setAuthState("authed"); loadData(); }} />
+  );
+
+  if (loading) return (
+    <div className="min-h-screen bg-surface-base flex items-center justify-center">
+      <div className="text-center">
+        <Shield size={40} className="text-ink-500 mx-auto mb-4 animate-pulse" />
+        <p className="text-gray-400">Loading admin panel...</p>
+      </div>
+    </div>
+  );
 
   const allSubjects = ["all", ...Array.from(new Set(notes.map(n => n.subjectDisplay || n.subject).filter(Boolean)))];
   const filteredNotes = notes.filter(n => {
@@ -198,19 +362,9 @@ const AdminDashboard = () => {
   const getUserNoteCount = (userId) => notes.filter(n => n.userId === userId).length;
   const getUserDownloads = (userId) => notes.filter(n => n.userId === userId).reduce((s, n) => s + (n.downloadCount || 0), 0);
 
-  if (loading) return (
-    <div className="min-h-screen bg-surface-base flex items-center justify-center">
-      <div className="text-center">
-        <Shield size={40} className="text-ink-500 mx-auto mb-4 animate-pulse" />
-        <p className="text-gray-400">Loading admin panel...</p>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-surface-base">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -223,12 +377,10 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-full">
-              ADMIN ACCESS
-            </span>
-            <button onClick={handleLogout}
-              className="text-xs text-gray-500 hover:text-white border border-surface-border px-3 py-1.5 rounded-lg transition-colors">
-              Lock Panel
+            <span className="text-xs font-mono bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-full">ADMIN ACCESS</span>
+            <button onClick={handleLockPanel}
+              className="text-xs text-gray-500 hover:text-white border border-surface-border px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+              <Lock size={12} /> Lock Panel
             </button>
           </div>
         </div>
@@ -245,9 +397,7 @@ const AdminDashboard = () => {
         <div className="flex gap-1 bg-surface-card border border-surface-border rounded-xl p-1 mb-6 w-fit">
           {[{ key: "overview", label: "All Notes" }, { key: "users", label: "All Users" }].map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.key ? "bg-ink-500 text-white" : "text-gray-500 hover:text-white"
-              }`}>
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.key ? "bg-ink-500 text-white" : "text-gray-500 hover:text-white"}`}>
               {tab.label}
             </button>
           ))}
