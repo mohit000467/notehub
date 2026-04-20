@@ -359,10 +359,15 @@ const AdminDashboard = () => {
   const [noteSearch, setNoteSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
-  const [deleteTarget, setDeleteTarget] = useState(null); // { type: "note"|"user", data: ... }
+
+  // ── Confirm modals state ──
+  const [deleteTarget, setDeleteTarget] = useState(null);   // { type: "note"|"user", data }
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [blockTarget, setBlockTarget] = useState(null);     // { action: "block"|"unblock", user }
+
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedUser, setExpandedUser] = useState(null);
-  const [profileUser, setProfileUser] = useState(null); // user for modal
+  const [profileUser, setProfileUser] = useState(null);
 
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
@@ -403,11 +408,13 @@ const AdminDashboard = () => {
       toast.success("Note deleted ✅");
     } else toast.error(result.error || "Delete failed");
     setDeleteTarget(null);
+    setDeleteConfirmText("");
   };
 
   // ── Delete User ──────────────────────────────────────────────
   const handleDeleteUser = async () => {
     if (!deleteTarget || deleteTarget.type !== "user") return;
+    if (deleteConfirmText !== "DELETE") return;
     setActionLoading(true);
     const result = await adminDeleteUser(deleteTarget.data.id);
     setActionLoading(false);
@@ -418,30 +425,40 @@ const AdminDashboard = () => {
       toast.success(`User "${deleteTarget.data.username}" deleted ✅`);
     } else toast.error(result.error || "Delete failed");
     setDeleteTarget(null);
+    setDeleteConfirmText("");
   };
 
-  // ── Block / Unblock ──────────────────────────────────────────
-  const handleBlock = async (user) => {
+  // ── Block confirm ────────────────────────────────────────────
+  const confirmBlock = async () => {
+    if (!blockTarget) return;
     setActionLoading(true);
-    const result = await adminBlockUser(user.id);
+    const result = await adminBlockUser(blockTarget.user.id);
     setActionLoading(false);
     if (result.success) {
-      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, isBlocked: true } : u));
-      if (profileUser?.id === user.id) setProfileUser((p) => ({ ...p, isBlocked: true }));
-      toast.success(`User "${user.username}" blocked 🚫`);
+      setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: true } : u));
+      if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: true }));
+      toast.success(`User "${blockTarget.user.username}" blocked 🚫`);
     } else toast.error("Block failed");
+    setBlockTarget(null);
   };
 
-  const handleUnblock = async (user) => {
+  // ── Unblock confirm ──────────────────────────────────────────
+  const confirmUnblock = async () => {
+    if (!blockTarget) return;
     setActionLoading(true);
-    const result = await adminUnblockUser(user.id);
+    const result = await adminUnblockUser(blockTarget.user.id);
     setActionLoading(false);
     if (result.success) {
-      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, isBlocked: false } : u));
-      if (profileUser?.id === user.id) setProfileUser((p) => ({ ...p, isBlocked: false }));
-      toast.success(`User "${user.username}" unblocked ✅`);
+      setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: false } : u));
+      if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: false }));
+      toast.success(`User "${blockTarget.user.username}" unblocked ✅`);
     } else toast.error("Unblock failed");
+    setBlockTarget(null);
   };
+
+  // ── Trigger handlers (open modals) ───────────────────────────
+  const handleBlock = (user) => setBlockTarget({ action: "block", user });
+  const handleUnblock = (user) => setBlockTarget({ action: "unblock", user });
 
   const handleLockPanel = () => {
     sessionStorage.removeItem("admin_auth");
@@ -638,7 +655,6 @@ const AdminDashboard = () => {
               {filteredUsers.map((user, idx) => (
                 <React.Fragment key={user.id}>
                   <div className={`grid grid-cols-12 px-4 py-3.5 items-center hover:bg-surface-hover transition-colors ${idx !== filteredUsers.length - 1 || expandedUser === user.id ? "border-b border-surface-border" : ""}`}>
-                    {/* User info — click to open modal */}
                     <div className="col-span-3 flex items-center gap-2 cursor-pointer"
                       onClick={() => setProfileUser(user)}>
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden"
@@ -671,7 +687,6 @@ const AdminDashboard = () => {
                         {user.profileVisibility || "public"}
                       </span>
                     </div>
-                    {/* Action buttons */}
                     <div className="col-span-1 flex justify-center items-center gap-1">
                       <button onClick={() => setProfileUser(user)} title="View profile"
                         className="p-1.5 text-gray-600 hover:text-ink-400 hover:bg-ink-400/10 rounded-lg transition-all">
@@ -688,7 +703,7 @@ const AdminDashboard = () => {
                           <Ban size={13} />
                         </button>
                       )}
-                      <button onClick={() => setDeleteTarget({ type: "user", data: user })} title="Delete user"
+                      <button onClick={() => { setDeleteTarget({ type: "user", data: user }); setDeleteConfirmText(""); }} title="Delete user"
                         className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
                         <Trash2 size={13} />
                       </button>
@@ -709,16 +724,63 @@ const AdminDashboard = () => {
           onClose={() => setProfileUser(null)}
           onBlock={handleBlock}
           onUnblock={handleUnblock}
-          onDeleteNote={(note) => {
-            setDeleteTarget({ type: "note", data: note });
-          }}
-          onDeleteUser={(user) => {
-            setDeleteTarget({ type: "user", data: user });
-          }}
+          onDeleteNote={(note) => setDeleteTarget({ type: "note", data: note })}
+          onDeleteUser={(user) => { setDeleteTarget({ type: "user", data: user }); setDeleteConfirmText(""); }}
         />
       )}
 
-      {/* ── Confirm Delete Modal ── */}
+      {/* ── Block / Unblock Confirm Modal ── */}
+      {blockTarget && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-surface-card border border-surface-border rounded-2xl p-6 max-w-sm w-full">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${blockTarget.action === "block" ? "bg-amber-400/10" : "bg-green-400/10"}`}>
+                {blockTarget.action === "block"
+                  ? <Ban size={20} className="text-amber-400" />
+                  : <UserCheck size={20} className="text-green-400" />}
+              </div>
+              <button onClick={() => setBlockTarget(null)} className="text-gray-600 hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            <h3 className="text-lg font-display font-bold text-white mb-1">
+              {blockTarget.action === "block" ? "Block User?" : "Unblock User?"}
+            </h3>
+            <p className="text-sm text-gray-400 mb-1">
+              <span className="text-white font-medium">"{blockTarget.user.username}"</span>
+            </p>
+            <p className="text-xs text-gray-500 mb-1">{blockTarget.user.email}</p>
+
+            {blockTarget.action === "block" ? (
+              <p className="text-xs text-amber-400 mb-6 flex items-center gap-1 mt-2">
+                <AlertTriangle size={11} /> Blocked user won't be able to login or access their account.
+              </p>
+            ) : (
+              <p className="text-xs text-green-400 mb-6 flex items-center gap-1 mt-2">
+                <UserCheck size={11} /> User will regain full access to their account.
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setBlockTarget(null)}
+                className="flex-1 py-2.5 border border-surface-border text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={blockTarget.action === "block" ? confirmBlock : confirmUnblock}
+                disabled={actionLoading}
+                className={`flex-1 py-2.5 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 ${blockTarget.action === "block" ? "bg-amber-500 hover:bg-amber-400" : "bg-green-600 hover:bg-green-500"}`}>
+                {actionLoading
+                  ? (blockTarget.action === "block" ? "Blocking..." : "Unblocking...")
+                  : (blockTarget.action === "block" ? "Yes, Block User" : "Yes, Unblock User")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirm Modal ── */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-surface-card border border-surface-border rounded-2xl p-6 max-w-sm w-full">
@@ -726,7 +788,8 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-red-400/10 rounded-xl flex items-center justify-center">
                 <AlertTriangle size={20} className="text-red-400" />
               </div>
-              <button onClick={() => setDeleteTarget(null)} className="text-gray-600 hover:text-white transition-colors">
+              <button onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}
+                className="text-gray-600 hover:text-white transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -744,21 +807,31 @@ const AdminDashboard = () => {
                 <h3 className="text-lg font-display font-bold text-white mb-1">Delete User?</h3>
                 <p className="text-sm text-gray-500 mb-1">"{deleteTarget.data.username}"</p>
                 <p className="text-xs text-red-400 mb-2 flex items-center gap-1">
-                  <AlertTriangle size={11} /> This will delete ALL their notes too!
+                  <AlertTriangle size={11} /> This will permanently delete ALL their notes too!
                 </p>
-                <p className="text-xs text-gray-600 mb-6">{deleteTarget.data.email}</p>
+                <p className="text-xs text-gray-600 mb-3">{deleteTarget.data.email}</p>
+                <p className="text-xs text-gray-500 mb-2">
+                  Type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm:
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Type DELETE here"
+                  className="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:border-red-500 transition-all mb-4"
+                />
               </>
             )}
 
             <div className="flex gap-3">
-              <button onClick={() => setDeleteTarget(null)}
+              <button onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}
                 className="flex-1 py-2.5 border border-surface-border text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-colors">
                 Cancel
               </button>
               <button
                 onClick={deleteTarget.type === "note" ? handleDeleteNote : handleDeleteUser}
-                disabled={actionLoading}
-                className="flex-1 py-2.5 bg-red-500 hover:bg-red-400 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60">
+                disabled={actionLoading || (deleteTarget.type === "user" && deleteConfirmText !== "DELETE")}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-400 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                 {actionLoading ? "Deleting..." : deleteTarget.type === "note" ? "Delete Note" : "Delete User"}
               </button>
             </div>
