@@ -56,7 +56,7 @@ const SubjectSearchBar = () => {
   };
 
   return (
-    <div ref={wrapperRef} style={{ position: "relative", width: "100%" }}>
+    <div ref={wrapperRef} style={{ position: "relative", width: "100%", zIndex: 9999 }}>
       <form onSubmit={handleSubmit} className="relative">
         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
         <input
@@ -76,19 +76,49 @@ const SubjectSearchBar = () => {
       </form>
 
       {showDropdown && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#1e293b", border: "1px solid #334155", borderRadius: "10px", boxShadow: "0 8px 25px rgba(0,0,0,0.3)", zIndex: 1000, overflow: "hidden" }}>
-          <div style={{ padding: "6px 12px", fontSize: "11px", color: "#64748b", borderBottom: "1px solid #334155", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          right: 0,
+          background: "#0e1018",
+          border: "1px solid rgba(108,138,255,0.2)",
+          borderRadius: "12px",
+          boxShadow: "0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(108,138,255,0.05)",
+          zIndex: 9999,
+          overflow: "hidden",
+          backdropFilter: "blur(16px)",
+        }}>
+          <div style={{
+            padding: "6px 12px",
+            fontSize: "10px",
+            color: "#454d6a",
+            borderBottom: "1px solid rgba(108,138,255,0.1)",
+            textTransform: "uppercase",
+            letterSpacing: "0.8px",
+            fontFamily: "'IBM Plex Mono', monospace",
+          }}>
             Suggestions
           </div>
           {suggestions.map((subject, i) => (
             <div
               key={i}
               onMouseDown={() => handleSuggestionClick(subject)}
-              style={{ padding: "10px 16px", cursor: "pointer", fontSize: "14px", color: "#e2e8f0", borderBottom: i < suggestions.length - 1 ? "1px solid #1e293b" : "none", display: "flex", alignItems: "center", gap: "8px" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#334155")}
+              style={{
+                padding: "10px 16px",
+                cursor: "pointer",
+                fontSize: "14px",
+                color: "#eef0f8",
+                borderBottom: i < suggestions.length - 1 ? "1px solid rgba(108,138,255,0.06)" : "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(108,138,255,0.08)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <span>📚</span>
+              <span style={{ fontSize: "15px" }}>📚</span>
               {highlightMatch(subject, query)}
             </div>
           ))}
@@ -105,7 +135,7 @@ const highlightMatch = (text, query) => {
   return (
     <>
       {text.slice(0, index)}
-      <strong style={{ color: "#818cf8" }}>{text.slice(index, index + query.length)}</strong>
+      <strong style={{ color: "#6c8aff" }}>{text.slice(index, index + query.length)}</strong>
       {text.slice(index + query.length)}
     </>
   );
