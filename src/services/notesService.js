@@ -9,7 +9,6 @@ const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 
 // ── UPLOAD TO CLOUDINARY ──────────────────────────────────────
-// "auto" resource type — works for PDF, DOC, DOCX, PPT, images, all formats
 const uploadToCloudinary = async (file, onProgress) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -31,7 +30,6 @@ const uploadToCloudinary = async (file, onProgress) => {
       }
     });
     xhr.addEventListener("error", () => reject(new Error("Upload network error")));
-    // ✅ FIX: "auto" instead of "raw" — works for ALL file types publicly
     xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`);
     xhr.send(formData);
   });
@@ -60,6 +58,8 @@ export const uploadNote = async (noteData, file, userId, username, onProgress) =
       ratingCount: 0,
       ratingSum: 0,
       downloadCount: 0,
+      readCount: 0,      // ✅ NEW
+      readBy: [],        // ✅ NEW — track unique readers
       ratedBy: [],
       createdAt: serverTimestamp(),
     });
@@ -72,7 +72,7 @@ export const uploadNote = async (noteData, file, userId, username, onProgress) =
   }
 };
 
-// ── GET NOTES BY SUBJECT (filters private users) ──────────────
+// ── GET NOTES BY SUBJECT ──────────────────────────────────────
 export const getNotesBySubject = async (subject, sortBy = "createdAt") => {
   try {
     const validSort = ["createdAt", "downloadCount", "rating"];
@@ -118,7 +118,7 @@ export const getNotesByUser = async (userId) => {
   }
 };
 
-// ── GET ALL SUBJECTS (filters private/blocked users) ──────────
+// ── GET ALL SUBJECTS ──────────────────────────────────────────
 export const getAllSubjects = async () => {
   try {
     const snapshot = await getDocs(collection(db, "notes"));
@@ -152,7 +152,7 @@ export const getAllSubjects = async () => {
   }
 };
 
-// ── GET RECENT NOTES (filters private/blocked users) ─────────
+// ── GET RECENT NOTES ──────────────────────────────────────────
 export const getRecentNotes = async (limitCount = 12) => {
   try {
     const q = query(
@@ -189,6 +189,33 @@ export const incrementDownload = async (noteId) => {
   }
 };
 
+// ── INCREMENT READ COUNT (unique per user) ────────────────────
+// Ek user se sirf ek baar count badhega — chahe kitni baar bhi open kare
+export const incrementReadCount = async (noteId, userId) => {
+  try {
+    const noteRef = doc(db, "notes", noteId);
+    const noteSnap = await getDoc(noteRef);
+    if (!noteSnap.exists()) return { success: false, alreadyRead: false };
+
+    const data = noteSnap.data();
+    const readBy = data.readBy || [];
+
+    // Already read kiya hai — count mat badha
+    if (readBy.includes(userId)) {
+      return { success: true, alreadyRead: true };
+    }
+
+    // Pehli baar read kar raha hai — count badha
+    await updateDoc(noteRef, {
+      readCount: increment(1),
+      readBy: arrayUnion(userId),
+    });
+    return { success: true, alreadyRead: false };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 // ── RATE NOTE ─────────────────────────────────────────────────
 export const rateNote = async (noteId, userId, rating) => {
   try {
@@ -213,7 +240,7 @@ export const rateNote = async (noteId, userId, rating) => {
   }
 };
 
-// ── DELETE NOTE (owner only) ──────────────────────────────────
+// ── DELETE NOTE ───────────────────────────────────────────────
 export const deleteNote = async (noteId, noteData, userId) => {
   try {
     if (noteData.userId !== userId)
