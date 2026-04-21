@@ -1,6 +1,6 @@
 // src/pages/SubjectPage.jsx
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { BookOpen, ArrowLeft, Tag, FileText } from "lucide-react";
 import { getNotesBySubject } from "../services/notesService";
 import NoteCard from "../components/notes/NoteCard";
@@ -8,6 +8,7 @@ import { NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
 
 const SubjectPage = () => {
   const { subjectName } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const decoded = decodeURIComponent(subjectName || "");
 
@@ -16,6 +17,21 @@ const SubjectPage = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [activeTag, setActiveTag] = useState(null);
   const [unitFilter, setUnitFilter] = useState("all");
+
+  // ── Read URL params from AdvancedSearch ──────────────────────
+  const urlUnit   = searchParams.get("unit") || "";    // e.g. "unit 2"
+  const urlUserId = searchParams.get("userId") || "";  // e.g. Firebase UID
+
+  // Set unit filter from URL on first load
+  useEffect(() => {
+    if (urlUnit) {
+      // Normalize: "unit 2" or "2" → "unit 2"
+      const normalized = urlUnit.toLowerCase().startsWith("unit")
+        ? urlUnit.toLowerCase().trim()
+        : `unit ${urlUnit.toLowerCase().trim()}`;
+      setUnitFilter(normalized);
+    }
+  }, [urlUnit]);
 
   const allTags = [...new Set(notes.flatMap((n) => n.tags || []))];
 
@@ -42,13 +58,18 @@ const SubjectPage = () => {
     setLoading(false);
   };
 
-  // Apply tag + unit filter
+  // ── Apply tag + unit + userId filter ─────────────────────────
   const filtered = notes
     .filter((n) => !activeTag || n.tags?.includes(activeTag))
     .filter((n) => {
       if (unitFilter === "all") return true;
       const match = n.title?.toLowerCase().match(/unit\s*(\d+)/);
       return match ? `unit ${match[1]}` === unitFilter : false;
+    })
+    .filter((n) => {
+      // ── userId filter from URL (AdvancedSearch se aaya) ──
+      if (!urlUserId) return true;
+      return n.userId === urlUserId;
     });
 
   const displayName = decoded
@@ -79,6 +100,21 @@ const SubjectPage = () => {
           <p className="text-sm text-gray-500">
             {loading ? "Loading..." : `${filtered.length} note${filtered.length !== 1 ? "s" : ""} found`}
           </p>
+          {/* Active filter indicators */}
+          {(urlUnit || urlUserId) && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {urlUnit && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan">
+                  🔍 Unit: {urlUnit}
+                </span>
+              )}
+              {urlUserId && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-ink-500/10 border border-ink-500/30 text-ink-400">
+                  👤 Specific user
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Sort buttons */}
@@ -133,7 +169,7 @@ const SubjectPage = () => {
         </div>
       )}
 
-      {/* Unit filter — only show if units detected */}
+      {/* Unit filter */}
       {allUnits.length > 1 && (
         <div className="flex flex-wrap gap-2 mb-6">
           <span className="text-xs text-gray-600 self-center">Unit:</span>
@@ -161,8 +197,10 @@ const SubjectPage = () => {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 border border-surface-border rounded-2xl bg-surface-card">
           <FileText size={40} className="text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">No notes found for "{displayName}"</p>
-          <p className="text-sm text-gray-600 mb-4">Be the first to contribute!</p>
+          <p className="text-gray-500 font-medium">No notes found</p>
+          <p className="text-sm text-gray-600 mb-4">
+            {urlUnit || urlUserId ? "Try different filters" : `Be the first to contribute to "${displayName}"!`}
+          </p>
           <button
             onClick={() => navigate("/upload")}
             className="px-4 py-2 bg-ink-500 hover:bg-ink-400 text-white text-sm rounded-lg transition-colors"

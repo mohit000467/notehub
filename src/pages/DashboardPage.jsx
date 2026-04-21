@@ -1,13 +1,12 @@
 // src/pages/DashboardPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileText, Download, Star, Trash2, AlertTriangle, BookOpen, Users, Copy, Search } from "lucide-react";
+import { Upload, FileText, Download, Star, Trash2, AlertTriangle, BookOpen, Copy } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getNotesByUser, deleteNote } from "../services/notesService";
-import { getUserByUniqueId } from "../services/userService";
 import { NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
 import { formatDate, getFileTypeLabel } from "../utils/helpers";
-import SubjectSearchBar from "../components/search/SubjectSearchBar";
+import AdvancedSearch from "../components/search/AdvancedSearch";
 import toast from "react-hot-toast";
 
 const StatCard = ({ icon: Icon, label, value, color, glowColor }) => (
@@ -18,17 +17,17 @@ const StatCard = ({ icon: Icon, label, value, color, glowColor }) => (
       border: `1px solid ${glowColor}22`,
       boxShadow: `0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)`,
     }}>
-  <div className="absolute inset-0 opacity-20 pointer-events-none"
-    style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}30, transparent 70%)` }} />
-  <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 relative z-10"
-    style={{ background: `${glowColor}15`, border: `1px solid ${glowColor}30` }}>
-    <Icon size={22} style={{ color }} />
+    <div className="absolute inset-0 opacity-20 pointer-events-none"
+      style={{ background: `radial-gradient(circle at 20% 50%, ${glowColor}30, transparent 70%)` }} />
+    <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 relative z-10"
+      style={{ background: `${glowColor}15`, border: `1px solid ${glowColor}30` }}>
+      <Icon size={22} style={{ color }} />
+    </div>
+    <div className="relative z-10">
+      <p className="text-2xl font-display font-bold text-white">{value}</p>
+      <p className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</p>
+    </div>
   </div>
-  <div className="relative z-10">
-    <p className="text-2xl font-display font-bold text-white">{value}</p>
-    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</p>
-  </div>
-</div>
 );
 
 const DashboardPage = () => {
@@ -38,8 +37,6 @@ const DashboardPage = () => {
   const [loading, setLoading]           = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]         = useState(false);
-  const [userQuery, setUserQuery]       = useState("");
-  const [userSearching, setUserSearching] = useState(false);
 
   useEffect(() => { if (currentUser) fetchNotes(); }, [currentUser]);
 
@@ -66,25 +63,6 @@ const DashboardPage = () => {
       toast.success("Note deleted");
     } else toast.error(result.error);
     setDeleteTarget(null);
-  };
-
-  // ── User ID search — sahi messages ────────────────────────
-  const handleUserSearch = async (e) => {
-    e.preventDefault();
-    if (!userQuery.trim()) return;
-    setUserSearching(true);
-    const result = await getUserByUniqueId(userQuery.trim());
-    setUserSearching(false);
-
-    if (result.success) {
-      navigate(`/profile/${result.data.userId}`);
-    } else if (result.isBlocked) {
-      toast.error("This user has been blocked by the admin 🚫");
-    } else if (result.isPrivate) {
-      toast.error("This profile is set to private 🔒");
-    } else {
-      toast.error("No user found with this ID");
-    }
   };
 
   const glassPanel = {
@@ -139,32 +117,13 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Search Section */}
+      {/* ── Advanced Search Section ── */}
       <div className="rounded-2xl p-5 mb-6"
         style={{ ...glassPanel, overflow: "visible", position: "relative", zIndex: 100 }}>
         <p className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
-          <Search size={14} style={{ color: "var(--accent)" }} /> Search
+          <FileText size={14} style={{ color: "var(--accent)" }} /> Search Notes
         </p>
-        <div className="grid sm:grid-cols-2 gap-3" style={{ position: "relative", zIndex: 100 }}>
-          <div style={{ position: "relative", zIndex: 200 }}>
-            <SubjectSearchBar />
-          </div>
-          <form onSubmit={handleUserSearch} className="relative">
-            <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
-            <input
-              value={userQuery}
-              onChange={(e) => setUserQuery(e.target.value.toUpperCase())}
-              placeholder="Find user by ID (USR-XXXXXX)"
-              className="w-full rounded-xl pl-9 pr-16 py-2.5 text-sm font-mono outline-none transition-all"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(108,138,255,0.15)", color: "var(--text-primary)" }}
-            />
-            <button type="submit" disabled={userSearching}
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: "rgba(45,212,191,0.12)", border: "1px solid rgba(45,212,191,0.25)", color: "rgba(45,212,191,0.9)" }}>
-              {userSearching ? "..." : "Find"}
-            </button>
-          </form>
-        </div>
+        <AdvancedSearch />
       </div>
 
       {/* Stats */}
