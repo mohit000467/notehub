@@ -111,23 +111,7 @@ const HomePage = () => {
             </button>
           </div>
 
-          {/* Stats */}
-          <div className="flex justify-center gap-6">
-            {[
-              { icon: BookOpen, label: "Notes",     value: recentNotes.length || "500+" },
-              { icon: Users,    label: "Students",  value: "200+" },
-              { icon: Download, label: "Downloads", value: "2K+"  },
-            ].map(({ icon: Icon, label, value }) => (
-              <div
-                key={label}
-                className="glass-card rounded-2xl px-6 py-4 text-center min-w-[100px]"
-              >
-                <Icon size={18} className="mx-auto mb-2" style={{ color: "var(--accent)" }} />
-                <div className="text-2xl font-display font-bold text-white">{value}</div>
-                <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{label}</div>
-              </div>
-            ))}
-          </div>
+
         </div>
       </div>
     );
@@ -160,20 +144,6 @@ const HomePage = () => {
             A collaborative platform for students to share subject-wise notes. Search by subject or find a student by their unique ID.
           </p>
 
-          {/* Stats */}
-          <div className="flex justify-center gap-10 mb-10">
-            {[
-              { icon: BookOpen, label: "Notes",    value: totalNotes },
-              { icon: Users,    label: "Subjects", value: subjects.length },
-              { icon: Download, label: "Downloads",value: "∞" },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="text-center">
-                <Icon size={18} className="mx-auto mb-1.5" style={{ color: "var(--accent)" }} />
-                <div className="text-2xl font-display font-bold text-white">{value}</div>
-                <div className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</div>
-              </div>
-            ))}
-          </div>
 
           {/* Search Bars */}
           <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
