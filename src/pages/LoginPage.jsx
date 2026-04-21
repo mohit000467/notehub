@@ -73,19 +73,7 @@ const LoginPage = () => {
             Upload, discover and download academic notes. Connect with students across subjects and units.
           </p>
 
-          {/* Stats row */}
-          <div className="flex gap-4">
-            {stats.map(({ icon: Icon, label, value }) => (
-              <div
-                key={label}
-                className="glass-card rounded-2xl px-5 py-4 flex-1 text-center"
-              >
-                <Icon size={18} className="mx-auto mb-2" style={{ color: "var(--accent)" }} />
-                <p className="text-xl font-display font-bold text-white">{value}</p>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</p>
-              </div>
-            ))}
-          </div>
+
         </div>
 
         <p className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
