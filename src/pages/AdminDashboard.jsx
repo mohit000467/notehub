@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, FileText, Download, Star, Trash2, AlertTriangle,
-  Search, Shield, ChevronDown, ChevronUp, X, Eye, EyeOff,
+  Search, Shield, X, Eye, EyeOff,
   Lock, Settings, CheckCircle, Ban, UserCheck, UserX, ExternalLink,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
   getAllUsers, getAllNotes, adminDeleteNote, adminDeleteUser,
-  adminBlockUser, adminUnblockUser, adminDeleteAllUserNotes,
+  adminBlockUser, adminUnblockUser,
   getPlatformStats, isAdminUser, ADMIN_EMAIL,
   getAdminPassword, setAdminPassword,
 } from "../services/adminService";
@@ -250,6 +251,19 @@ const UserProfileModal = ({ user, userNotes, onClose, onBlock, onUnblock, onDele
               </div>
               <p className="text-sm text-gray-500">{user.email}</p>
               <p className="text-xs text-gray-600 font-mono mt-0.5">{user.uniqueId}</p>
+
+              {/* ✅ SIGNUP DATE — yahan dikh raha hai */}
+              <div className="flex items-center gap-1.5 mt-2">
+                <Calendar size={12} className="text-ink-400" />
+                <span className="text-xs text-gray-500">
+                  Joined:{" "}
+                  <span className="text-ink-300 font-semibold">
+                    {user.createdAt
+                      ? formatDate(user.createdAt)
+                      : "—"}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
           <button onClick={onClose} className="text-gray-600 hover:text-white transition-colors mt-1">
@@ -359,12 +373,9 @@ const AdminDashboard = () => {
   const [noteSearch, setNoteSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
-
-  // ── Confirm modals state ──
-  const [deleteTarget, setDeleteTarget] = useState(null);   // { type: "note"|"user", data }
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [blockTarget, setBlockTarget] = useState(null);     // { action: "block"|"unblock", user }
-
+  const [blockTarget, setBlockTarget] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedUser, setExpandedUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
@@ -397,7 +408,6 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  // ── Delete Note ──────────────────────────────────────────────
   const handleDeleteNote = async () => {
     if (!deleteTarget || deleteTarget.type !== "note") return;
     setActionLoading(true);
@@ -411,7 +421,6 @@ const AdminDashboard = () => {
     setDeleteConfirmText("");
   };
 
-  // ── Delete User ──────────────────────────────────────────────
   const handleDeleteUser = async () => {
     if (!deleteTarget || deleteTarget.type !== "user") return;
     if (deleteConfirmText !== "DELETE") return;
@@ -428,50 +437,38 @@ const AdminDashboard = () => {
     setDeleteConfirmText("");
   };
 
-  // ── Block confirm ────────────────────────────────────────────
-  
-const confirmBlock = async () => {
-  if (!blockTarget) return;
-  setActionLoading(true);
-  const result = await adminBlockUser(blockTarget.user.id);
-  setActionLoading(false);
-  if (result.success) {
-    setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: true } : u));
-    if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: true }));
-    // ✅ Stats real-time update
-    setStats((prev) => ({ ...prev, blockedUsers: (prev?.blockedUsers || 0) + 1 }));
-    toast.success(`User "${blockTarget.user.username}" blocked 🚫`);
-  } else toast.error("Block failed");
-  setBlockTarget(null);
-};
-
-  // ── Unblock confirm ──────────────────────────────────────────
-  
-const confirmUnblock = async () => {
-  if (!blockTarget) return;
-  setActionLoading(true);
-  const result = await adminUnblockUser(blockTarget.user.id);
-  setActionLoading(false);
-  if (result.success) {
-    setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: false } : u));
-    if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: false }));
-    // ✅ Stats real-time update
-    setStats((prev) => ({ ...prev, blockedUsers: Math.max((prev?.blockedUsers || 0) - 1, 0) }));
-    toast.success(`User "${blockTarget.user.username}" unblocked ✅`);
-  } else toast.error("Unblock failed");
-  setBlockTarget(null);
-};
-
-  // ── Trigger handlers (open modals) ───────────────────────────
-  const handleBlock = (user) => setBlockTarget({ action: "block", user });
-  const handleUnblock = (user) => setBlockTarget({ action: "unblock", user });
-
-  const handleLockPanel = () => {
-    sessionStorage.removeItem("admin_auth");
-    setAuthState("gate");
+  const confirmBlock = async () => {
+    if (!blockTarget) return;
+    setActionLoading(true);
+    const result = await adminBlockUser(blockTarget.user.id);
+    setActionLoading(false);
+    if (result.success) {
+      setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: true } : u));
+      if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: true }));
+      setStats((prev) => ({ ...prev, blockedUsers: (prev?.blockedUsers || 0) + 1 }));
+      toast.success(`User "${blockTarget.user.username}" blocked 🚫`);
+    } else toast.error("Block failed");
+    setBlockTarget(null);
   };
 
-  // ── Guards ───────────────────────────────────────────────────
+  const confirmUnblock = async () => {
+    if (!blockTarget) return;
+    setActionLoading(true);
+    const result = await adminUnblockUser(blockTarget.user.id);
+    setActionLoading(false);
+    if (result.success) {
+      setUsers((prev) => prev.map((u) => u.id === blockTarget.user.id ? { ...u, isBlocked: false } : u));
+      if (profileUser?.id === blockTarget.user.id) setProfileUser((p) => ({ ...p, isBlocked: false }));
+      setStats((prev) => ({ ...prev, blockedUsers: Math.max((prev?.blockedUsers || 0) - 1, 0) }));
+      toast.success(`User "${blockTarget.user.username}" unblocked ✅`);
+    } else toast.error("Unblock failed");
+    setBlockTarget(null);
+  };
+
+  const handleBlock   = (user) => setBlockTarget({ action: "block",   user });
+  const handleUnblock = (user) => setBlockTarget({ action: "unblock", user });
+  const handleLockPanel = () => { sessionStorage.removeItem("admin_auth"); setAuthState("gate"); };
+
   if (authState === "loading") return (
     <div className="min-h-screen bg-surface-base flex items-center justify-center">
       <Shield size={40} className="text-ink-500 animate-pulse" />
@@ -498,7 +495,6 @@ const confirmUnblock = async () => {
     </div>
   );
 
-  // ── Derived Data ─────────────────────────────────────────────
   const allSubjects = ["all", ...Array.from(new Set(
     notes.map((n) => n.subjectDisplay || n.subject).filter(Boolean)
   ))];
@@ -520,13 +516,13 @@ const confirmUnblock = async () => {
     u.uniqueId?.toLowerCase().includes(userSearch.toLowerCase())
   );
 
-  const getUserNotes = (userId) => notes.filter((n) => n.userId === userId);
-  const getUserDownloads = (userId) =>
-    getUserNotes(userId).reduce((s, n) => s + (n.downloadCount || 0), 0);
+  const getUserNotes     = (userId) => notes.filter((n) => n.userId === userId);
+  const getUserDownloads = (userId) => getUserNotes(userId).reduce((s, n) => s + (n.downloadCount || 0), 0);
 
   return (
     <div className="min-h-screen bg-surface-base">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -648,21 +644,24 @@ const confirmUnblock = async () => {
             </div>
             <p className="text-xs text-gray-600 mb-3">{filteredUsers.length} users</p>
             <div className="bg-surface-card border border-surface-border rounded-2xl overflow-hidden">
+
+              {/* ✅ "Joined" column added in header */}
               <div className="grid grid-cols-12 px-4 py-3 border-b border-surface-border text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                <div className="col-span-3">User</div>
+                <div className="col-span-2">User</div>
                 <div className="col-span-3">Email</div>
                 <div className="col-span-2">Unique ID</div>
                 <div className="col-span-1 text-center">Notes</div>
                 <div className="col-span-1 text-center">DL</div>
-                <div className="col-span-1 text-center">Status</div>
+                <div className="col-span-2">Joined</div>
                 <div className="col-span-1 text-center">Actions</div>
               </div>
 
               {filteredUsers.map((user, idx) => (
                 <React.Fragment key={user.id}>
-                  <div className={`grid grid-cols-12 px-4 py-3.5 items-center hover:bg-surface-hover transition-colors ${idx !== filteredUsers.length - 1 || expandedUser === user.id ? "border-b border-surface-border" : ""}`}>
-                    <div className="col-span-3 flex items-center gap-2 cursor-pointer"
-                      onClick={() => setProfileUser(user)}>
+                  <div className={`grid grid-cols-12 px-4 py-3.5 items-center hover:bg-surface-hover transition-colors ${idx !== filteredUsers.length - 1 ? "border-b border-surface-border" : ""}`}>
+
+                    {/* User name */}
+                    <div className="col-span-2 flex items-center gap-2 cursor-pointer" onClick={() => setProfileUser(user)}>
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden"
                         style={{ backgroundColor: user.avatarColor || "#3a5aff" }}>
                         {user.photoURL
@@ -670,9 +669,7 @@ const confirmUnblock = async () => {
                           : user.username?.[0]?.toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm text-white truncate hover:text-ink-300 transition-colors">
-                          {user.username}
-                        </p>
+                        <p className="text-sm text-white truncate hover:text-ink-300 transition-colors">{user.username}</p>
                         {user.isBlocked && (
                           <span className="text-xs text-red-400 flex items-center gap-0.5">
                             <Ban size={9} /> blocked
@@ -680,6 +677,7 @@ const confirmUnblock = async () => {
                         )}
                       </div>
                     </div>
+
                     <div className="col-span-3"><p className="text-xs text-gray-500 truncate">{user.email}</p></div>
                     <div className="col-span-2"><span className="text-xs font-mono text-gray-500">{user.uniqueId}</span></div>
                     <div className="col-span-1 text-center">
@@ -688,11 +686,18 @@ const confirmUnblock = async () => {
                     <div className="col-span-1 text-center">
                       <span className="text-xs text-teal-400">{getUserDownloads(user.id)}</span>
                     </div>
-                    <div className="col-span-1 text-center">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${user.profileVisibility === "public" ? "bg-green-500/10 text-green-400" : "bg-gray-500/10 text-gray-500"}`}>
-                        {user.profileVisibility || "public"}
-                      </span>
+
+                    {/* ✅ JOINED DATE — yahan table mein dikh raha hai */}
+                    <div className="col-span-2">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={11} className="text-ink-400 flex-shrink-0" />
+                        <span className="text-xs text-gray-400">
+                          {user.createdAt ? formatDate(user.createdAt) : "—"}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Actions */}
                     <div className="col-span-1 flex justify-center items-center gap-1">
                       <button onClick={() => setProfileUser(user)} title="View profile"
                         className="p-1.5 text-gray-600 hover:text-ink-400 hover:bg-ink-400/10 rounded-lg transition-all">
@@ -749,7 +754,6 @@ const confirmUnblock = async () => {
                 <X size={18} />
               </button>
             </div>
-
             <h3 className="text-lg font-display font-bold text-white mb-1">
               {blockTarget.action === "block" ? "Block User?" : "Unblock User?"}
             </h3>
@@ -757,7 +761,6 @@ const confirmUnblock = async () => {
               <span className="text-white font-medium">"{blockTarget.user.username}"</span>
             </p>
             <p className="text-xs text-gray-500 mb-1">{blockTarget.user.email}</p>
-
             {blockTarget.action === "block" ? (
               <p className="text-xs text-amber-400 mb-6 flex items-center gap-1 mt-2">
                 <AlertTriangle size={11} /> Blocked user won't be able to login or access their account.
@@ -767,7 +770,6 @@ const confirmUnblock = async () => {
                 <UserCheck size={11} /> User will regain full access to their account.
               </p>
             )}
-
             <div className="flex gap-3">
               <button onClick={() => setBlockTarget(null)}
                 className="flex-1 py-2.5 border border-surface-border text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-colors">
@@ -799,7 +801,6 @@ const confirmUnblock = async () => {
                 <X size={18} />
               </button>
             </div>
-
             {deleteTarget.type === "note" ? (
               <>
                 <h3 className="text-lg font-display font-bold text-white mb-1">Delete Note?</h3>
@@ -819,16 +820,12 @@ const confirmUnblock = async () => {
                 <p className="text-xs text-gray-500 mb-2">
                   Type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm:
                 </p>
-                <input
-                  type="text"
-                  value={deleteConfirmText}
+                <input type="text" value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="Type DELETE here"
-                  className="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:border-red-500 transition-all mb-4"
-                />
+                  className="w-full bg-surface-elevated border border-surface-border rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:border-red-500 transition-all mb-4" />
               </>
             )}
-
             <div className="flex gap-3">
               <button onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); }}
                 className="flex-1 py-2.5 border border-surface-border text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-colors">
