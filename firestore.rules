@@ -8,12 +8,17 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isAdmin()
+      // Direct document read — public profiles anyone, private only owner/admin
+      allow get: if isAdmin()
         || resource.data.profileVisibility == 'public'
-        || request.auth.uid == userId;
+        || (request.auth != null && request.auth.uid == userId);
+
+      // Collection query (for uniqueId search) — any logged-in user can query
+      // Privacy + block check is handled in userService.js after fetch
+      allow list: if request.auth != null || isAdmin();
 
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId
+      allow update: if (request.auth != null && request.auth.uid == userId)
         || isAdmin();
       allow delete: if isAdmin();
     }

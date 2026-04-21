@@ -19,15 +19,40 @@ export const getUserById = async (userId) => {
 };
 
 // ── SEARCH USER BY UNIQUE ID ──────────────────────────────────
+// Any logged-in user can search — privacy enforced here
 export const getUserByUniqueId = async (uniqueId) => {
   try {
-    const q = query(collection(db, "users"), where("uniqueId", "==", uniqueId.toUpperCase()));
+    const q = query(
+      collection(db, "users"),
+      where("uniqueId", "==", uniqueId.trim().toUpperCase())
+    );
     const snapshot = await getDocs(q);
-    if (snapshot.empty) return { success: false, error: "No user found with this ID" };
-    const userData = snapshot.docs[0].data();
-    if (userData.profileVisibility === "private") {
-      return { success: false, error: "This profile is private", isPrivate: true };
+
+    if (snapshot.empty) {
+      return { success: false, error: "No user found with this ID" };
     }
+
+    const userData = snapshot.docs[0].data();
+
+    // ── Blocked user — show blocked message ───────────────
+    if (userData.isBlocked === true) {
+      return {
+        success: false,
+        error: "This user has been blocked by the admin",
+        isBlocked: true,
+      };
+    }
+
+    // ── Private profile — show private message ────────────
+    if (userData.profileVisibility === "private") {
+      return {
+        success: false,
+        error: "This profile is set to private",
+        isPrivate: true,
+      };
+    }
+
+    // ── Public profile — accessible by anyone ─────────────
     return { success: true, data: userData };
   } catch (error) {
     return { success: false, error: error.message };
@@ -84,10 +109,9 @@ export const uploadProfilePhoto = async (userId, file) => {
     const data = await res.json();
     if (!data.secure_url) throw new Error("Upload failed");
 
-    // Save photo URL in Firestore
     await updateDoc(doc(db, "users", userId), {
       photoURL: data.secure_url,
-      avatarColor: null, // remove color when photo set
+      avatarColor: null,
     });
 
     return { success: true, photoURL: data.secure_url };
@@ -101,7 +125,7 @@ export const updateAvatarColor = async (userId, color) => {
   try {
     await updateDoc(doc(db, "users", userId), {
       avatarColor: color,
-      photoURL: null, // remove photo when color set
+      photoURL: null,
     });
     return { success: true };
   } catch (error) {
