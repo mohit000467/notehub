@@ -41,50 +41,63 @@ const AdvancedSearch = () => {
   }, []);
 
   const handleSearch = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const subjectTrimmed = subject.trim();
-    const unitTrimmed = unit.trim();
-    const userIdTrimmed = userId.trim().toUpperCase();
+  const subjectTrimmed = subject.trim();
+  const unitTrimmed = unit.trim();
+  const userIdTrimmed = userId.trim().toUpperCase();
 
-    // Kuch to fill hona chahiye
-    if (!subjectTrimmed && !unitTrimmed && !userIdTrimmed) {
-      toast.error("Please fill at least one search field");
+  // Kuch to fill hona chahiye
+  if (!subjectTrimmed && !unitTrimmed && !userIdTrimmed) {
+    toast.error("Please fill at least one search field");
+    return;
+  }
+
+  // ── Sirf Unit diya — subject maango ──
+  if (unitTrimmed && !subjectTrimmed && !userIdTrimmed) {
+    toast.error("Please enter a subject to search by unit 📚");
+    return;
+  }
+
+  setSearching(true);
+
+  // ── Sirf User ID diya — profile pe jao ──
+  if (userIdTrimmed && !subjectTrimmed && !unitTrimmed) {
+    const result = await getUserByUniqueId(userIdTrimmed);
+    setSearching(false);
+    if (!result.success) {
+      if (result.isBlocked) toast.error("This user has been blocked by the admin 🚫");
+      else if (result.isPrivate) toast.error("This profile is set to private 🔒");
+      else toast.error("No user found with this ID");
       return;
     }
+    navigate(`/profile/${result.data.userId}`);
+    return;
+  }
 
-    setSearching(true);
-
-    // Agar userId diya hai — pehle validate karo
-    let resolvedUserId = null;
-    if (userIdTrimmed) {
-      const result = await getUserByUniqueId(userIdTrimmed);
-      if (!result.success) {
-        setSearching(false);
-        if (result.isBlocked) toast.error("This user has been blocked by the admin 🚫");
-        else if (result.isPrivate) toast.error("This profile is set to private 🔒");
-        else toast.error("No user found with this ID");
-        return;
-      }
-      resolvedUserId = result.data.userId;
+  // ── Subject + optional filters ──
+  let resolvedUserId = null;
+  if (userIdTrimmed) {
+    const result = await getUserByUniqueId(userIdTrimmed);
+    if (!result.success) {
+      setSearching(false);
+      if (result.isBlocked) toast.error("This user has been blocked by the admin 🚫");
+      else if (result.isPrivate) toast.error("This profile is set to private 🔒");
+      else toast.error("No user found with this ID");
+      return;
     }
+    resolvedUserId = result.data.userId;
+  }
 
-    setSearching(false);
+  setSearching(false);
 
-    // Build search params
-    const params = new URLSearchParams();
-    if (subjectTrimmed) params.set("subject", subjectTrimmed.toLowerCase());
-    if (unitTrimmed) params.set("unit", unitTrimmed.toLowerCase());
-    if (resolvedUserId) params.set("userId", resolvedUserId);
+  const params = new URLSearchParams();
+  if (subjectTrimmed) params.set("subject", subjectTrimmed.toLowerCase());
+  if (unitTrimmed) params.set("unit", unitTrimmed.toLowerCase());
+  if (resolvedUserId) params.set("userId", resolvedUserId);
 
-    // Subject hai to subject page pe jao with filters
-    // Subject nahi hai lekin unit/userId hai to search results page pe jao
-    if (subjectTrimmed) {
-      navigate(`/subject/${encodeURIComponent(subjectTrimmed.toLowerCase())}?${params.toString()}`);
-    } else {
-      navigate(`/search?${params.toString()}`);
-    }
-  };
+  navigate(`/subject/${encodeURIComponent(subjectTrimmed.toLowerCase())}?${params.toString()}`);
+};
 
   const handleSuggestionClick = (s) => {
     setSubject(s);
