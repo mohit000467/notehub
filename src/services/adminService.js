@@ -8,7 +8,7 @@ import { db } from "./firebase";
 export const ADMIN_EMAIL = "mohitsingh97941111@gmail.com";
 export const isAdminUser = (email) => email === ADMIN_EMAIL;
 
-// ── ADMIN PANEL PASSWORD (Firestore) ──────────────────────────
+// ── ADMIN PANEL PASSWORD ──────────────────────────────────────
 export const getAdminPassword = async () => {
   try {
     const snap = await getDoc(doc(db, "config", "admin_config"));
@@ -33,7 +33,7 @@ export const setAdminPassword = async (newPassword) => {
   }
 };
 
-// ── GET ALL USERS (admin sees ALL — public + private + blocked) 
+// ── GET ALL USERS ─────────────────────────────────────────────
 export const getAllUsers = async () => {
   try {
     const snapshot = await getDocs(collection(db, "users"));
@@ -41,10 +41,7 @@ export const getAllUsers = async () => {
       success: true,
       data: snapshot.docs
         .map((d) => ({ id: d.id, ...d.data() }))
-        .sort(
-          (a, b) =>
-            (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
-        ),
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)),
     };
   } catch (error) {
     return { success: false, error: error.message };
@@ -107,14 +104,9 @@ export const adminDeleteNote = async (noteId) => {
 // ── ADMIN DELETE ALL NOTES OF A USER ─────────────────────────
 export const adminDeleteAllUserNotes = async (userId) => {
   try {
-    const q = query(
-      collection(db, "notes"),
-      where("userId", "==", userId)
-    );
+    const q = query(collection(db, "notes"), where("userId", "==", userId));
     const snapshot = await getDocs(q);
-    const deletePromises = snapshot.docs.map((d) => deleteDoc(d.ref));
-    await Promise.all(deletePromises);
-    // Clear uploadedNotes array on user
+    await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
     await updateDoc(doc(db, "users", userId), { uploadedNotes: [] });
     return { success: true, count: snapshot.size };
   } catch (error) {
@@ -123,7 +115,6 @@ export const adminDeleteAllUserNotes = async (userId) => {
 };
 
 // ── ADMIN BLOCK USER ──────────────────────────────────────────
-// Blocked user: cannot login effectively, notes hidden from platform
 export const adminBlockUser = async (userId) => {
   try {
     await updateDoc(doc(db, "users", userId), {
@@ -149,20 +140,54 @@ export const adminUnblockUser = async (userId) => {
   }
 };
 
-// ── ADMIN DELETE USER (Firestore doc + all their notes) ───────
-// Note: Firebase Auth user deletion requires Admin SDK (server-side)
-// This removes all user data from Firestore — user cannot login usefully
+// ── ADMIN DELETE USER ─────────────────────────────────────────
 export const adminDeleteUser = async (userId) => {
   try {
-    // 1. Delete all notes by this user
     const q = query(collection(db, "notes"), where("userId", "==", userId));
     const notesSnap = await getDocs(q);
-    const deleteNotePromises = notesSnap.docs.map((d) => deleteDoc(d.ref));
-    await Promise.all(deleteNotePromises);
-
-    // 2. Delete user Firestore document
+    await Promise.all(notesSnap.docs.map((d) => deleteDoc(d.ref)));
     await deleteDoc(doc(db, "users", userId));
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
 
+// ── GET ALL LOGIN-LOCKED USERS ────────────────────────────────
+export const getLockedUsers = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, "loginAttempts"));
+    const now = Date.now();
+    const locked = [];
+    snapshot.docs.forEach((d) => {
+      const data = d.data();
+      if (data.lockedUntil) {
+        const lockedUntil = typeof data.lockedUntil === "number"
+          ? data.lockedUntil
+          : data.lockedUntil?.toMillis?.() || 0;
+        if (lockedUntil > now) {
+          locked.push({
+            id: d.id, // email key
+            email: d.id.replace(/_/g, "."), // approximate
+            attempts: data.attempts || 0,
+            lockedUntil,
+            remaining: lockedUntil - now,
+            lastAttempt: data.lastAttempt,
+          });
+        }
+      }
+    });
+    return { success: true, data: locked };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ── ADMIN UNLOCK LOGIN-LOCKED USER ────────────────────────────
+export const adminUnlockLoginUser = async (docId) => {
+  try {
+    const ref = doc(db, "loginAttempts", docId);
+    await setDoc(ref, { attempts: 0, lockedUntil: null, lastAttempt: null });
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -172,19 +197,24 @@ export const adminDeleteUser = async (userId) => {
 // ── PLATFORM STATS ────────────────────────────────────────────
 export const getPlatformStats = async () => {
   try {
-    const [usersSnap, notesSnap] = await Promise.all([
+    const [usersSnap, notesSnap, attemptsSnap] = await Promise.all([
       getDocs(collection(db, "users")),
       getDocs(collection(db, "notes")),
+      getDocs(collection(db, "loginAttempts")),
     ]);
     const notes = notesSnap.docs.map((d) => d.data());
-    const totalDownloads = notes.reduce(
-      (s, n) => s + (n.downloadCount || 0),
-      0
-    );
+    const totalDownloads = notes.reduce((s, n) => s + (n.downloadCount || 0), 0);
     const totalRatings = notes.filter((n) => n.ratingCount > 0).length;
-    const blockedUsers = usersSnap.docs.filter(
-      (d) => d.data().isBlocked
-    ).length;
+    const blockedUsers = usersSnap.docs.filter((d) => d.data().isBlocked).length;
+    const now = Date.now();
+    const loginLockedUsers = attemptsSnap.docs.filter((d) => {
+      const data = d.data();
+      if (!data.lockedUntil) return false;
+      const lockedUntil = typeof data.lockedUntil === "number"
+        ? data.lockedUntil : data.lockedUntil?.toMillis?.() || 0;
+      return lockedUntil > now;
+    }).length;
+
     return {
       success: true,
       data: {
@@ -193,6 +223,7 @@ export const getPlatformStats = async () => {
         totalDownloads,
         totalRatings,
         blockedUsers,
+        loginLockedUsers,
       },
     };
   } catch (error) {
