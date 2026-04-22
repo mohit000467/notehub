@@ -1,7 +1,7 @@
 // src/services/geminiService.js
 // Gemini AI — Note Summarizer
 
-const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY || "AIzaSyDrJNsO2UAC64Huz-VXXkvn2QEDLUIntE4";
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY || "AIzaSyBFmzeAGasFA2fJHDz0c44JzeQuw2UA4VE";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 // ── Generate summary from note metadata ──────────────────────
 // PDF content directly read nahi ho sakta browser se freely,
