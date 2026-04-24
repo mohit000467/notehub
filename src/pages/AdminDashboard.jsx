@@ -1,4 +1,4 @@
-// src/pages/AdminDashboard.jsx — Ultra Aesthetic Glassmorphic + 3D Animations
+// src/pages/AdminDashboard.jsx — Ultra Aesthetic Glassmorphic + 3D Animations (FIXED)
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -34,7 +34,7 @@ const formatTimeLeft = (ms) => {
 };
 
 // ------------------------------------------------------------------
-// 3D Tilt Stat Card (replaces old StatCard with glass + 3D)
+// 3D Tilt Stat Card
 // ------------------------------------------------------------------
 const TiltStatCard = ({ icon: Icon, label, value, gradientFrom, gradientTo }) => {
   const cardRef = useRef(null);
@@ -72,7 +72,6 @@ const TiltStatCard = ({ icon: Icon, label, value, gradientFrom, gradientTo }) =>
         willChange: "transform",
       }}
     >
-      {/* Animated gradient overlay */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500"
         style={{
@@ -97,7 +96,7 @@ const TiltStatCard = ({ icon: Icon, label, value, gradientFrom, gradientTo }) =>
 };
 
 // ------------------------------------------------------------------
-// SetPasswordScreen (glassy version)
+// SetPasswordScreen
 // ------------------------------------------------------------------
 const SetPasswordScreen = ({ onDone }) => {
   const [newPass, setNewPass] = useState("");
@@ -119,7 +118,7 @@ const SetPasswordScreen = ({ onDone }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-black/60 to-purple-950/40 animate-pulse-slow" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-black/60 to-purple-950/40" />
       <div className="w-full max-w-sm bg-black/30 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
         <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
           <Shield size={28} className="text-blue-400" />
@@ -167,7 +166,7 @@ const SetPasswordScreen = ({ onDone }) => {
 };
 
 // ------------------------------------------------------------------
-// AdminLoginGate (glassy + animated)
+// AdminLoginGate
 // ------------------------------------------------------------------
 const AdminLoginGate = ({ onSuccess, correctPassword }) => {
   const [password, setPassword] = useState("");
@@ -265,7 +264,7 @@ const AdminLoginGate = ({ onSuccess, correctPassword }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-black/60 to-purple-950/40 animate-pulse-slow" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-black/60 to-purple-950/40" />
       <div className="w-full max-w-sm bg-black/30 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
         <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
           <Shield size={28} className="text-red-400" />
@@ -310,7 +309,7 @@ const AdminLoginGate = ({ onSuccess, correctPassword }) => {
 };
 
 // ------------------------------------------------------------------
-// LockedUserRow (animated countdown, glassy row)
+// LockedUserRow (animated countdown)
 // ------------------------------------------------------------------
 const LockedUserRow = ({ lockedUser, onUnlock }) => {
   const [remaining, setRemaining] = useState(lockedUser.remaining);
@@ -338,14 +337,13 @@ const LockedUserRow = ({ lockedUser, onUnlock }) => {
 };
 
 // ------------------------------------------------------------------
-// UserProfileModal (glassmorphic modal)
+// UserProfileModal (glassmorphic)
 // ------------------------------------------------------------------
 const UserProfileModal = ({ user, userNotes, onClose, onBlock, onUnblock, onDeleteNote, onDeleteUser }) => {
   const totalDL = userNotes.reduce((s, n) => s + (n.downloadCount || 0), 0);
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
       <div className="bg-black/40 backdrop-blur-2xl border border-white/20 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
         <div className="flex items-start justify-between p-6 border-b border-white/10">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-bold overflow-hidden" style={{ backgroundColor: user.avatarColor || "#3a5aff" }}>
@@ -363,15 +361,12 @@ const UserProfileModal = ({ user, userNotes, onClose, onBlock, onUnblock, onDele
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><X size={20} /></button>
         </div>
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-4 p-6 border-b border-white/10">
           <div className="bg-white/5 rounded-xl p-4 text-center"><p className="text-2xl font-bold text-white">{userNotes.length}</p><p className="text-xs text-gray-400">Notes Uploaded</p></div>
           <div className="bg-white/5 rounded-xl p-4 text-center"><p className="text-2xl font-bold text-cyan-400">{totalDL}</p><p className="text-xs text-gray-400">Total Downloads</p></div>
           <div className="bg-white/5 rounded-xl p-4 text-center"><span className={`text-sm px-3 py-1 rounded-full ${user.profileVisibility === "public" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>{user.profileVisibility || "public"}</span><p className="text-xs text-gray-400 mt-2">Profile Status</p></div>
         </div>
-        {/* Bio */}
         {user.bio && <div className="px-6 pt-4"><p className="text-xs text-gray-400 uppercase">Bio</p><p className="text-sm text-gray-300">{user.bio}</p></div>}
-        {/* Notes list */}
         <div className="p-6">
           <p className="text-xs text-gray-400 mb-3 uppercase">Uploaded Notes ({userNotes.length})</p>
           {userNotes.length === 0 ? <p className="text-sm text-gray-500 italic">No notes uploaded.</p> : (
@@ -395,7 +390,6 @@ const UserProfileModal = ({ user, userNotes, onClose, onBlock, onUnblock, onDele
             </div>
           )}
         </div>
-        {/* Actions */}
         <div className="px-6 pb-6 flex flex-wrap gap-3 border-t border-white/10 pt-5">
           {user.isBlocked ? (
             <button onClick={() => onUnblock(user)} className="flex items-center gap-2 px-4 py-2.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 rounded-xl text-sm font-medium transition-all hover:scale-105">
@@ -416,7 +410,7 @@ const UserProfileModal = ({ user, userNotes, onClose, onBlock, onUnblock, onDele
 };
 
 // ------------------------------------------------------------------
-// Main AdminDashboard (fully aesthetic)
+// Main AdminDashboard
 // ------------------------------------------------------------------
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
@@ -438,11 +432,11 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [profileUser, setProfileUser] = useState(null);
 
-  // All original logic (unchanged)
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
     if (!isAdminUser(currentUser.email)) { toast.error("Access denied"); navigate("/"); return; }
     checkPassword();
+    // eslint-disable-next-line
   }, [currentUser]);
 
   const checkPassword = async () => {
@@ -556,12 +550,12 @@ const AdminDashboard = () => {
     { key: "locked", label: `Login Locked${lockedUsers.length > 0 ? ` (${lockedUsers.length})` : ""}` },
   ];
 
-  // Main render with immersive glass background
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-blue-950" />
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%239C92AC%22 fill-opacity=%220.05%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20" />
+      
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (
@@ -581,7 +575,7 @@ const AdminDashboard = () => {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Header with glassmorphism */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shadow-lg animate-float">
@@ -600,7 +594,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* 3D Tilt Stats Grid */}
+        {/* 3D Tilt Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
           <TiltStatCard icon={Users} label="Total Users" value={stats?.totalUsers || 0} gradientFrom="#3b82f6" gradientTo="#8b5cf6" />
           <TiltStatCard icon={FileText} label="Total Notes" value={stats?.totalNotes || 0} gradientFrom="#14b8a6" gradientTo="#06b6d4" />
@@ -610,7 +604,7 @@ const AdminDashboard = () => {
           <TiltStatCard icon={Clock} label="Login Locked" value={stats?.loginLockedUsers || 0} gradientFrom="#f97316" gradientTo="#ea580c" />
         </div>
 
-        {/* Glassy Tabs with sliding underline */}
+        {/* Glassy Tabs */}
         <div className="relative flex gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-xl p-1 mb-6 w-fit">
           {tabs.map((tab) => (
             <button
@@ -628,7 +622,7 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* NOTES TAB (glassy table) */}
+        {/* NOTES TAB */}
         {activeTab === "overview" && (
           <div className="bg-black/30 backdrop-blur-2xl border border-white/20 rounded-2xl p-4 shadow-2xl">
             <div className="flex flex-wrap gap-3 mb-4">
@@ -670,9 +664,11 @@ const AdminDashboard = () => {
                         <td className="text-xs text-gray-300">{note.uploaderName || note.username || "—"}</td>
                         <td className="text-center text-teal-400 text-sm">{note.downloadCount || 0}</td>
                         <td className="text-xs text-gray-400">{formatDate(note.createdAt)}</td>
-                        <td className="flex justify-center gap-2">
-                          <a href={note.fileURL} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><ExternalLink size={14} /></a>
-                          <button onClick={() => setDeleteTarget({ type: "note", data: note })} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                        <td>
+                          <div className="flex justify-center gap-2">
+                            <a href={note.fileURL} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-blue-400 transition-colors"><ExternalLink size={14} /></a>
+                            <button onClick={() => setDeleteTarget({ type: "note", data: note })} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -683,7 +679,7 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* USERS TAB (glassy table with joined column) */}
+        {/* USERS TAB */}
         {activeTab === "users" && (
           <div className="bg-black/30 backdrop-blur-2xl border border-white/20 rounded-2xl p-4 shadow-2xl">
             <div className="relative mb-4">
@@ -718,14 +714,16 @@ const AdminDashboard = () => {
                       <td className="text-center text-blue-400">{getUserNotes(user.id).length}</td>
                       <td className="text-center text-teal-400">{getUserDownloads(user.id)}</td>
                       <td className="text-xs text-gray-400 flex items-center gap-1"><Calendar size={11} />{user.createdAt ? formatDate(user.createdAt) : "—"}</td>
-                      <td className="flex justify-center gap-2">
-                        <button onClick={() => setProfileUser(user)} className="text-gray-400 hover:text-white"><Eye size={14} /></button>
-                        {user.isBlocked ? (
-                          <button onClick={() => handleUnblock(user)} className="text-gray-400 hover:text-green-400"><UserCheck size={14} /></button>
-                        ) : (
-                          <button onClick={() => handleBlock(user)} className="text-gray-400 hover:text-amber-400"><Ban size={14} /></button>
-                        )}
-                        <button onClick={() => { setDeleteTarget({ type: "user", data: user }); setDeleteConfirmText(""); }} className="text-gray-400 hover:text-red-400"><Trash2 size={14} /></button>
+                      <td>
+                        <div className="flex justify-center gap-2">
+                          <button onClick={() => setProfileUser(user)} className="text-gray-400 hover:text-white"><Eye size={14} /></button>
+                          {user.isBlocked ? (
+                            <button onClick={() => handleUnblock(user)} className="text-gray-400 hover:text-green-400"><UserCheck size={14} /></button>
+                          ) : (
+                            <button onClick={() => handleBlock(user)} className="text-gray-400 hover:text-amber-400"><Ban size={14} /></button>
+                          )}
+                          <button onClick={() => { setDeleteTarget({ type: "user", data: user }); setDeleteConfirmText(""); }} className="text-gray-400 hover:text-red-400"><Trash2 size={14} /></button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -758,7 +756,7 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Modals (profile, block, delete) - all glassy versions */}
+      {/* Modals */}
       {profileUser && (
         <UserProfileModal
           user={profileUser}
@@ -840,8 +838,8 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Custom keyframes */}
-      <style jsx>{`
+      {/* Global animations style */}
+      <style>{`
         @keyframes floatParticle {
           0% { transform: translateY(0px) translateX(0px); }
           50% { transform: translateY(-20px) translateX(10px); }
@@ -858,7 +856,6 @@ const AdminDashboard = () => {
         }
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-        .animate-pulse-slow { animation: pulse 8s ease-in-out infinite; }
       `}</style>
     </div>
   );
