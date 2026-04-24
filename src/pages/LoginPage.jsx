@@ -1,39 +1,9 @@
 // src/pages/LoginPage.jsx — Pure Gen Z Aesthetic + Deep Glassmorphism
 import React, { useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
-import { BookOpen, FileText, Star, Users, Download, Sparkles } from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import AuthForm from "../components/auth/AuthForm";
-
-// ── Animated floating note cards — Ultra Glassy ────────────
-const FloatingCard = ({ style, icon: Icon, label, value, delay }) => (
-  <div
-    className="absolute flex items-center gap-3 px-5 py-3 rounded-2xl pointer-events-none select-none"
-    style={{
-      background: "rgba(255, 255, 255, 0.03)",
-      border: "1px solid rgba(255, 255, 255, 0.08)",
-      backdropFilter: "blur(20px) saturate(200%)",
-      WebkitBackdropFilter: "blur(20px) saturate(200%)",
-      boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)",
-      animation: `floatCard 6s ease-in-out infinite alternate`,
-      animationDelay: delay,
-      ...style,
-    }}
-  >
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-      style={{ 
-        background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.15))", 
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "0 0 15px rgba(139,92,246,0.2)"
-      }}>
-      <Icon size={18} className="text-cyan-400 drop-shadow-md" />
-    </div>
-    <div>
-      <p className="text-base font-display font-bold text-white tracking-tight leading-none mb-1">{value}</p>
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 leading-none">{label}</p>
-    </div>
-  </div>
-);
 
 // ── Animated book pages — Neon Holographic ────────────────
 const BookAnimation = () => (
@@ -104,20 +74,9 @@ const LoginPage = () => {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
-  const stats = [
-    { icon: FileText, label: "Notes Dropped", value: "500+",  delay: "0s",    style: { top: "12%",  left: "3%" } },
-    { icon: Users,    label: "Community",     value: "200+",  delay: "1.2s",  style: { top: "28%",  left: "-2%" } },
-    { icon: Download, label: "Hits",          value: "2K+",   delay: "0.6s",  style: { bottom: "28%", left: "0%" } },
-    { icon: Star,     label: "Vibe Score",    value: "4.8★",  delay: "1.8s",  style: { bottom: "12%", left: "5%" } },
-  ];
-
   return (
     <>
       <style>{`
-        @keyframes floatCard {
-          from { transform: translateY(0px) rotate(0deg); }
-          to   { transform: translateY(-15px) rotate(1deg); }
-        }
         @keyframes pageFan {
           from { transform: translateX(-50%) translateY(-50%) translateX(16px) rotate(var(--r-from, -10deg)); }
           to   { transform: translateX(-50%) translateY(-50%) translateX(16px) rotate(var(--r-to, 10deg)); }
@@ -195,9 +154,6 @@ const LoginPage = () => {
 
           {/* Center content */}
           <div className="flex-1 flex flex-col justify-center py-12 relative">
-
-            {/* Floating stat cards */}
-            {stats.map((s, i) => <FloatingCard key={i} {...s} />)}
 
             {/* Book animation */}
             <BookAnimation />
