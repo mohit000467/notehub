@@ -1,7 +1,7 @@
 // src/pages/DashboardPage.jsx — Pure Gen Z Aesthetic + Deep Glassmorphism
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileText, Download, Star, Trash2, AlertTriangle, BookOpen, Copy } from "lucide-react";
+import { Upload, FileText, Download, Star, Trash2, AlertTriangle, BookOpen, Copy, Search } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getNotesByUser, deleteNote } from "../services/notesService";
 import { NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
@@ -22,7 +22,7 @@ const TiltCard = ({ icon: Icon, label, value, color, glowColor, delay = 0 }) => 
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateYVal = ((x - centerX) / centerX) * 12; // Max ±12deg for snappier feel
+    const rotateYVal = ((x - centerX) / centerX) * 12; 
     const rotateXVal = ((centerY - y) / centerY) * 12;
     setRotateY(rotateYVal);
     setRotateX(rotateXVal);
@@ -185,23 +185,49 @@ const DashboardPage = () => {
         </div>
 
         {/* Stats Cards Grid */}      
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <TiltCard icon={FileText} label="Total Uploads"   value={notes.length}      color="#c084fc" glowColor="#c084fc" delay="0s" />
           <TiltCard icon={Download} label="Total Downloads" value={totalDownloads}    color="#22d3ee" glowColor="#22d3ee" delay="0.15s" />
           <TiltCard icon={Star}     label="Avg Rating"      value={avgRating}         color="#fbbf24" glowColor="#fbbf24" delay="0.3s" />
           <TiltCard icon={BookOpen} label="Rated Notes"     value={ratedNotes.length} color="#4ade80" glowColor="#4ade80" delay="0.45s" />
         </div>
 
-        {/* Advanced Search Section */}
-        <div className="rounded-[2.5rem] p-6 mb-10 transform-gpu transition-all duration-500 relative z-20"
-          style={glassPanel}>
-          <div className="absolute inset-x-0 -top-px h-px w-1/2 mx-auto bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <p className="text-sm font-bold uppercase tracking-widest mb-6 flex items-center gap-3 text-gray-300">
-            <span className="p-2 rounded-xl bg-white/5 border border-white/10"><FileText size={16} className="text-cyan-400" /></span> 
-            Explore Database
-          </p>
-          <AdvancedSearch />
+        {/* ── Advanced Search Section (ULTRA GLASSY CURVY AESTHETIC) ── */}
+        <div className="relative group z-20 mb-12 transform-gpu hover:scale-[1.01] transition-all duration-500">
+          
+          {/* Animated Neon Glow Behind the Curvy Search Panel */}
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-violet-600/40 via-cyan-600/40 to-fuchsia-600/40 rounded-[3.5rem] blur-2xl opacity-50 group-hover:opacity-80 transition duration-1000 animate-gradient-xy pointer-events-none"></div>
+
+          {/* Super Curvy Glass Container */}
+          <div className="relative rounded-[3rem] p-6 sm:p-10 overflow-hidden"
+            style={{
+              background: "rgba(15, 15, 20, 0.55)",
+              backdropFilter: "blur(50px) saturate(250%)",
+              WebkitBackdropFilter: "blur(50px) saturate(250%)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              boxShadow: "0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 2px 5px rgba(255, 255, 255, 0.05)",
+            }}>
+            
+            {/* Inner Glare Effects */}
+            <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+            <div className="absolute bottom-0 right-1/4 w-1/3 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+            
+            <p className="text-sm font-bold uppercase tracking-widest mb-8 flex items-center justify-center sm:justify-start gap-3 text-gray-300 relative z-10">
+              <span className="p-2.5 rounded-2xl bg-gradient-to-br from-white/10 to-white/0 border border-white/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                <Search size={18} className="text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+              </span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 drop-shadow-sm">
+                Explore The Vault
+              </span>
+            </p>
+            
+            <div className="relative z-10">
+              {/* Ye aapke internal Search Component ko render karega */}
+              <AdvancedSearch />
+            </div>
+          </div>
         </div>
+        {/* ───────────────────────────────────────────────────────── */}
 
         {/* My Uploads Section */}
         <div className="relative z-10">
@@ -341,6 +367,11 @@ const DashboardPage = () => {
           @keyframes shimmer {
             100% { transform: translateX(100%); }
           }
+          @keyframes gradientXY {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
           .animate-float-subtle {
             animation: floatSubtle 6s ease-in-out infinite;
           }
@@ -349,6 +380,10 @@ const DashboardPage = () => {
           }
           .animate-pulse-slow {
             animation: pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          }
+          .animate-gradient-xy {
+            background-size: 200% 200%;
+            animation: gradientXY 8s ease infinite;
           }
         `}</style>
       </div>
