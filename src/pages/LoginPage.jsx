@@ -1,102 +1,100 @@
-// src/pages/LoginPage.jsx — NoteHub Premium: White · Black · Blue
+// src/pages/LoginPage.jsx — Pure Gen Z Aesthetic + Deep Glassmorphism
 import React, { useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { BookOpen, FileText, Star, Users, Download, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import AuthForm from "../components/auth/AuthForm";
 
-// ── Animated floating note cards ──────────────────────────
+// ── Animated floating note cards — Ultra Glassy ────────────
 const FloatingCard = ({ style, icon: Icon, label, value, delay }) => (
   <div
-    className="absolute flex items-center gap-2.5 px-4 py-2.5 rounded-2xl pointer-events-none select-none"
+    className="absolute flex items-center gap-3 px-5 py-3 rounded-2xl pointer-events-none select-none"
     style={{
-      background: "rgba(12,12,20,0.85)",
-      border: "1px solid rgba(26,109,255,0.2)",
-      backdropFilter: "blur(16px)",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(26,109,255,0.08)",
+      background: "rgba(255, 255, 255, 0.03)",
+      border: "1px solid rgba(255, 255, 255, 0.08)",
+      backdropFilter: "blur(20px) saturate(200%)",
+      WebkitBackdropFilter: "blur(20px) saturate(200%)",
+      boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)",
       animation: `floatCard 6s ease-in-out infinite alternate`,
       animationDelay: delay,
       ...style,
     }}
   >
-    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-      style={{ background: "rgba(26,109,255,0.15)", border: "1px solid rgba(26,109,255,0.25)" }}>
-      <Icon size={14} style={{ color: "#6aaeff" }} />
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+      style={{ 
+        background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.15))", 
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 0 15px rgba(139,92,246,0.2)"
+      }}>
+      <Icon size={18} className="text-cyan-400 drop-shadow-md" />
     </div>
     <div>
-      <p className="text-xs font-bold text-white" style={{ fontFamily: "var(--font-display)", lineHeight: 1 }}>{value}</p>
-      <p className="text-xs" style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontSize: "10px" }}>{label}</p>
+      <p className="text-base font-display font-bold text-white tracking-tight leading-none mb-1">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 leading-none">{label}</p>
     </div>
   </div>
 );
 
-// ── Animated book pages ───────────────────────────────────
+// ── Animated book pages — Neon Holographic ────────────────
 const BookAnimation = () => (
-  <div className="relative w-56 h-56 mx-auto mb-10">
+  <div className="relative w-56 h-56 mx-auto mb-10 transform-gpu hover:scale-105 transition-transform duration-500">
     {/* Glow base */}
     <div className="absolute inset-0 rounded-3xl"
-      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(26,109,255,0.2), transparent 70%)" }} />
+      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(139,92,246,0.25), transparent 70%)" }} />
 
     {/* Book spine */}
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-40 rounded-xl"
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-40 rounded-2xl"
       style={{
-        background: "linear-gradient(145deg, #1a6dff 0%, #0d47d9 100%)",
-        boxShadow: "0 20px 60px rgba(26,109,255,0.4), -8px 0 20px rgba(0,0,0,0.3)",
+        background: "linear-gradient(145deg, #8b5cf6 0%, #06b6d4 100%)",
+        boxShadow: "0 20px 50px rgba(139,92,246,0.4), inset 0 2px 10px rgba(255,255,255,0.3)",
       }}>
       {/* Book cover lines */}
-      <div className="absolute inset-4 flex flex-col justify-center items-center gap-2">
-        <BookOpen size={28} className="text-white opacity-90" />
-        <div className="w-12 h-0.5 rounded bg-white opacity-40" />
-        <div className="w-8 h-0.5 rounded bg-white opacity-25" />
+      <div className="absolute inset-4 flex flex-col justify-center items-center gap-3">
+        <BookOpen size={32} className="text-white drop-shadow-lg" />
+        <div className="w-12 h-1 rounded-full bg-white/60 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+        <div className="w-8 h-1 rounded-full bg-white/40" />
       </div>
-      {/* Shine */}
-      <div className="absolute top-0 left-0 right-0 h-1/3 rounded-xl opacity-20"
-        style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)" }} />
     </div>
 
     {/* Pages fanning out */}
     {[...Array(5)].map((_, i) => (
       <div key={i}
-        className="absolute left-1/2 top-1/2 rounded-r-lg"
+        className="absolute left-1/2 top-1/2 rounded-r-xl"
         style={{
           width: "28px",
           height: "148px",
           background: i % 2 === 0
-            ? "linear-gradient(to right, #e8ecff, #f4f6ff)"
-            : "linear-gradient(to right, #d8ddf5, #e8ecff)",
+            ? "linear-gradient(to right, rgba(255,255,255,0.9), rgba(245,243,255,1))"
+            : "linear-gradient(to right, rgba(237,233,254,1), rgba(255,255,255,0.9))",
           transformOrigin: "left center",
-          transform: `translateX(-50%) translateY(-50%) translateX(16px) rotate(${(i - 2) * 4}deg)`,
-          animation: `pageFan 3s ease-in-out infinite alternate`,
+          transform: `translateX(-50%) translateY(-50%) translateX(16px) rotate(${(i - 2) * 5}deg)`,
+          animation: `pageFan 3.5s ease-in-out infinite alternate`,
           animationDelay: `${i * 0.15}s`,
-          boxShadow: "2px 0 8px rgba(0,0,0,0.15)",
+          boxShadow: "2px 0 15px rgba(0,0,0,0.2)",
           zIndex: i,
         }}
       >
         {/* Page lines */}
         <div className="absolute inset-x-2 top-4 flex flex-col gap-1.5">
           {[...Array(6)].map((_, j) => (
-            <div key={j} className="h-px rounded opacity-30"
-              style={{ background: "#1a6dff", width: `${70 + j * 5}%` }} />
+            <div key={j} className="h-0.5 rounded-full opacity-40"
+              style={{ background: "linear-gradient(90deg, #8b5cf6, #06b6d4)", width: `${70 + j * 5}%` }} />
           ))}
         </div>
       </div>
     ))}
 
-    {/* Orbiting dot */}
-    <div className="absolute w-3 h-3 rounded-full"
+    {/* Orbiting dots */}
+    <div className="absolute w-3 h-3 rounded-full bg-cyan-400"
       style={{
-        background: "#1a6dff",
-        boxShadow: "0 0 12px rgba(26,109,255,0.8)",
-        top: "10%",
-        left: "20%",
+        boxShadow: "0 0 20px rgba(34,211,238,0.8)",
+        top: "10%", left: "20%",
         animation: "orbitDot 4s linear infinite",
       }} />
-    <div className="absolute w-2 h-2 rounded-full"
+    <div className="absolute w-2.5 h-2.5 rounded-full bg-fuchsia-400"
       style={{
-        background: "#6aaeff",
-        boxShadow: "0 0 8px rgba(106,174,255,0.6)",
-        bottom: "15%",
-        right: "15%",
+        boxShadow: "0 0 15px rgba(232,121,249,0.8)",
+        bottom: "15%", right: "15%",
         animation: "orbitDot 5s linear infinite reverse",
       }} />
   </div>
@@ -107,58 +105,69 @@ const LoginPage = () => {
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const stats = [
-    { icon: FileText, label: "Notes Shared",    value: "500+",  delay: "0s",    style: { top: "12%",  left: "5%" } },
-    { icon: Users,    label: "Students",         value: "200+",  delay: "1.2s",  style: { top: "28%",  left: "2%" } },
-    { icon: Download, label: "Downloads",        value: "2K+",   delay: "0.6s",  style: { bottom: "28%", left: "4%" } },
-    { icon: Star,     label: "Avg Rating",       value: "4.8★",  delay: "1.8s",  style: { bottom: "12%", left: "6%" } },
+    { icon: FileText, label: "Notes Dropped", value: "500+",  delay: "0s",    style: { top: "12%",  left: "3%" } },
+    { icon: Users,    label: "Community",     value: "200+",  delay: "1.2s",  style: { top: "28%",  left: "-2%" } },
+    { icon: Download, label: "Hits",          value: "2K+",   delay: "0.6s",  style: { bottom: "28%", left: "0%" } },
+    { icon: Star,     label: "Vibe Score",    value: "4.8★",  delay: "1.8s",  style: { bottom: "12%", left: "5%" } },
   ];
 
   return (
     <>
       <style>{`
         @keyframes floatCard {
-          from { transform: translateY(0px); }
-          to   { transform: translateY(-12px); }
+          from { transform: translateY(0px) rotate(0deg); }
+          to   { transform: translateY(-15px) rotate(1deg); }
         }
         @keyframes pageFan {
-          from { transform: translateX(-50%) translateY(-50%) translateX(16px) rotate(var(--r-from, -8deg)); }
-          to   { transform: translateX(-50%) translateY(-50%) translateX(16px) rotate(var(--r-to, 8deg)); }
+          from { transform: translateX(-50%) translateY(-50%) translateX(16px) rotate(var(--r-from, -10deg)); }
+          to   { transform: translateX(-50%) translateY(-50%) translateX(16px) rotate(var(--r-to, 10deg)); }
         }
         @keyframes orbitDot {
-          from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
-          to   { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
+          from { transform: rotate(0deg) translateX(90px) rotate(0deg); }
+          to   { transform: rotate(360deg) translateX(90px) rotate(-360deg); }
         }
         @keyframes scanLine {
           from { transform: translateY(-100%); }
           to   { transform: translateY(100vh); }
         }
         @keyframes gridPulse {
-          0%, 100% { opacity: 0.015; }
-          50%       { opacity: 0.03; }
+          0%, 100% { opacity: 0.02; }
+          50%       { opacity: 0.05; }
         }
         @keyframes borderGlow {
-          0%, 100% { box-shadow: 0 0 20px rgba(26,109,255,0.1); }
-          50%       { box-shadow: 0 0 40px rgba(26,109,255,0.2); }
+          0%, 100% { box-shadow: 0 0 30px rgba(139,92,246,0.1); }
+          50%       { box-shadow: 0 0 50px rgba(6,182,212,0.2); }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
         }
       `}</style>
 
-      <div className="min-h-screen auth-bg flex overflow-hidden relative">
+      <div className="min-h-screen flex overflow-hidden relative bg-[#0a0a0c]">
+
+        {/* Background Neon Aura Orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-violet-600/20 blur-[150px] mix-blend-screen" style={{ animation: "pulse-slow 8s infinite" }}></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[700px] h-[700px] rounded-full bg-cyan-600/10 blur-[150px] mix-blend-screen"></div>
+          <div className="absolute top-[40%] left-[40%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/10 blur-[120px] mix-blend-screen"></div>
+        </div>
 
         {/* Grid overlay */}
-        <div className="absolute inset-0 pointer-events-none"
+        <div className="absolute inset-0 pointer-events-none z-0"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(26,109,255,0.04) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(26,109,255,0.04) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
             `,
             backgroundSize: "60px 60px",
             animation: "gridPulse 4s ease-in-out infinite",
           }} />
 
         {/* Scan line */}
-        <div className="absolute left-0 right-0 h-px pointer-events-none"
+        <div className="absolute left-0 right-0 h-px pointer-events-none z-0"
           style={{
-            background: "linear-gradient(90deg, transparent, rgba(26,109,255,0.4), transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)",
             animation: "scanLine 8s linear infinite",
           }} />
 
@@ -166,25 +175,26 @@ const LoginPage = () => {
         <div className="hidden lg:flex flex-col justify-between w-[52%] px-16 py-12 relative z-10">
 
           {/* Logo */}
-          <div className="auth-logo-enter flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center pulse-ring"
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center relative group"
               style={{
-                background: "linear-gradient(135deg, #1a6dff, #0d47d9)",
-                boxShadow: "0 8px 24px rgba(26,109,255,0.4)",
+                background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
+                boxShadow: "0 10px 30px rgba(139,92,246,0.5)",
               }}>
-              <BookOpen size={20} className="text-white" />
+              <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <BookOpen size={24} className="text-white relative z-10 drop-shadow-md" />
             </div>
             <div>
-              <span className="font-bold text-xl text-white" style={{ fontFamily: "var(--font-display)" }}>NoteHub</span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full font-mono"
-                style={{ background: "rgba(26,109,255,0.12)", border: "1px solid rgba(26,109,255,0.25)", color: "#6aaeff" }}>
-                BETA
+              <span className="font-display font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">NoteHub</span>
+              <span className="ml-3 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest"
+                style={{ background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.3)", color: "#22d3ee" }}>
+                BETA 🚀
               </span>
             </div>
           </div>
 
           {/* Center content */}
-          <div className="stagger flex-1 flex flex-col justify-center py-12 relative">
+          <div className="flex-1 flex flex-col justify-center py-12 relative">
 
             {/* Floating stat cards */}
             {stats.map((s, i) => <FloatingCard key={i} {...s} />)}
@@ -193,55 +203,63 @@ const LoginPage = () => {
             <BookAnimation />
 
             {/* Headline */}
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono mb-6"
-                style={{ background: "rgba(26,109,255,0.1)", border: "1px solid rgba(26,109,255,0.2)", color: "#6aaeff" }}>
-                <Sparkles size={11} />
-                Academic Notes Platform
+            <div className="text-center relative z-20">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+                style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "#c084fc", backdropFilter: "blur(10px)" }}>
+                <Sparkles size={14} />
+                Gen Z Academic Vault
               </div>
 
-              <h1 className="text-5xl font-bold text-white mb-4 leading-tight"
-                style={{ fontFamily: "var(--font-display)" }}>
-                Share Knowledge,<br />
-                <span className="gradient-text">Grow Together</span>
+              <h1 className="text-5xl lg:text-6xl font-display font-extrabold text-white mb-6 leading-tight drop-shadow-lg">
+                Drop Knowledge,<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">Become a Legend.</span>
               </h1>
 
-              <p className="text-base max-w-md mx-auto" style={{ color: "var(--text-muted)", lineHeight: 1.7 }}>
-                Upload and discover academic notes organized by subject and unit.
-                Connect with students across your university.
+              <p className="text-lg max-w-md mx-auto text-gray-400 font-medium leading-relaxed">
+                Unlock the ultimate vault of academic notes. Connect, share, and level up with students worldwide. ✨
               </p>
             </div>
           </div>
 
           {/* Bottom */}
-          <p className="text-xs font-mono text-center" style={{ color: "var(--text-dim)" }}>
-            © 2026 NoteHub · Built for students, by students
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-600 text-center">
+            © 2026 NoteHub · Built for the future
           </p>
         </div>
 
-        {/* ── RIGHT PANEL ── */}
+        {/* ── RIGHT PANEL (Auth Container) ── */}
         <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
 
-          {/* Subtle right panel bg */}
-          <div className="absolute inset-0"
-            style={{
-              background: "linear-gradient(to left, rgba(6,6,8,0.8), transparent)",
-              borderLeft: "1px solid rgba(26,109,255,0.08)",
-            }} />
+          {/* Separation border line */}
+          <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent hidden lg:block" />
 
-          <div className="auth-card-enter glass-card w-full max-w-md p-8 relative z-10"
-            style={{ animation: "borderGlow 4s ease-in-out infinite" }}>
+          {/* Deep Glass Auth Card */}
+          <div className="w-full max-w-md p-8 sm:p-10 rounded-[2.5rem] relative overflow-hidden transition-all duration-500"
+            style={{ 
+              background: "rgba(20, 20, 25, 0.4)",
+              backdropFilter: "blur(40px) saturate(250%)",
+              WebkitBackdropFilter: "blur(40px) saturate(250%)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: "0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.1)",
+              animation: "borderGlow 5s ease-in-out infinite" 
+            }}>
+            
+            {/* Inner glow blobs for the card */}
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-violet-500/20 rounded-full blur-[40px] pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-[40px] pointer-events-none" />
 
             {/* Mobile logo */}
-            <div className="flex lg:hidden items-center gap-3 mb-8">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #1a6dff, #0d47d9)", boxShadow: "0 4px 16px rgba(26,109,255,0.35)" }}>
-                <BookOpen size={17} className="text-white" />
+            <div className="flex lg:hidden items-center justify-center gap-3 mb-10 relative z-10">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #8b5cf6, #06b6d4)", boxShadow: "0 10px 25px rgba(139,92,246,0.4)" }}>
+                <BookOpen size={24} className="text-white" />
               </div>
-              <span className="font-bold text-xl text-white" style={{ fontFamily: "var(--font-display)" }}>NoteHub</span>
+              <span className="font-display font-extrabold text-3xl text-white">NoteHub</span>
             </div>
 
-            <AuthForm mode="login" />
+            <div className="relative z-10">
+              <AuthForm mode="login" />
+            </div>
           </div>
         </div>
       </div>
