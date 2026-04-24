@@ -1,11 +1,10 @@
-// src/pages/ProfilePage.jsx — 3D Glassmorphism + Smart Animations
+// src/pages/ProfilePage.jsx — Pure Gen Z Aesthetic + Deep Glassmorphism
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Lock, Globe, Copy, ArrowLeft, FileText, Download, Star, Calendar, CheckCheck, Camera } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getUserById } from "../services/userService";
+import { getUserById, updateProfileVisibility, updateUserBio, uploadProfilePhoto, updateAvatarColor } from "../services/userService";
 import { getNotesByUser } from "../services/notesService";
-import { updateProfileVisibility, updateUserBio, uploadProfilePhoto, updateAvatarColor } from "../services/userService";
 import NoteCard from "../components/notes/NoteCard";
 import { ProfileSkeleton, NoteCardSkeleton } from "../components/ui/LoadingSkeleton";
 import { formatDate } from "../utils/helpers";
@@ -16,7 +15,7 @@ const AVATAR_COLORS = [
   "#06b6d4","#ec4899","#f97316","#14b8a6","#6366f1",
 ];
 
-// 3D Tilt Stat Card component
+// 3D Tilt Stat Card component - Ultra Glassy
 const TiltStatCard = ({ icon: Icon, label, value, color, delay = 0 }) => {
   const cardRef = useRef(null);
   const [rotateX, setRotateX] = useState(0);
@@ -29,8 +28,8 @@ const TiltStatCard = ({ icon: Icon, label, value, color, delay = 0 }) => {
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateYVal = ((x - centerX) / centerX) * 6;
-    const rotateXVal = ((centerY - y) / centerY) * 6;
+    const rotateYVal = ((x - centerX) / centerX) * 10;
+    const rotateXVal = ((centerY - y) / centerY) * 10;
     setRotateY(rotateYVal);
     setRotateX(rotateXVal);
   };
@@ -46,19 +45,28 @@ const TiltStatCard = ({ icon: Icon, label, value, color, delay = 0 }) => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(6px)`,
-        transition: "transform 0.1s ease-out",
-        background: `${color}0c`,
-        border: `1px solid ${color}25`,
-        boxShadow: `0 12px 24px -12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)`,
+        transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`,
+        transition: "transform 0.15s ease-out",
+        background: "rgba(255, 255, 255, 0.03)",
+        backdropFilter: "blur(40px) saturate(200%)",
+        WebkitBackdropFilter: "blur(40px) saturate(200%)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        boxShadow: `0 30px 60px -15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)`,
         willChange: "transform",
-        animation: `floatStat 4s ease-in-out infinite ${delay}`,
+        animation: `floatStat 6s ease-in-out infinite ${delay}`,
       }}
-      className="text-center p-3 rounded-xl transition-all duration-200"
+      className="text-center p-4 rounded-3xl transition-all duration-300 relative overflow-hidden group cursor-pointer"
     >
-      <Icon size={16} className="mx-auto mb-1.5" style={{ color }} />
-      <div className="text-lg font-display font-bold text-white">{value}</div>
-      <div className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</div>
+      {/* Internal Neon Glow Blob */}
+      <div className="absolute -top-5 -right-5 w-16 h-16 rounded-full opacity-30 pointer-events-none transition-all duration-500 group-hover:scale-150 group-hover:opacity-50"
+        style={{ background: `radial-gradient(circle, ${color}90, transparent 70%)`, filter: "blur(15px)" }} />
+        
+      <div className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center mb-2 relative z-10 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+        style={{ background: `linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0))`, border: `1px solid ${color}50`, boxShadow: `0 0 15px ${color}20` }}>
+        <Icon size={18} style={{ color }} />
+      </div>
+      <div className="text-xl md:text-2xl font-display font-extrabold text-white drop-shadow-md relative z-10">{value}</div>
+      <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-1 relative z-10" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</div>
     </div>
   );
 };
@@ -103,19 +111,19 @@ const ProfilePage = () => {
   const handleCopyId = () => {
     navigator.clipboard.writeText(profile.uniqueId);
     setIdCopied(true); setTimeout(() => setIdCopied(false), 2000);
-    toast.success("Unique ID copied!");
+    toast.success("Unique ID copied! 💅");
   };
 
   const handleVisibilityToggle = async () => {
     const newV = profile.profileVisibility === "public" ? "private" : "public";
     const result = await updateProfileVisibility(userId, newV);
-    if (result.success) { setProfile((p) => ({ ...p, profileVisibility: newV })); await refreshProfile(); toast.success(`Profile set to ${newV}`); }
+    if (result.success) { setProfile((p) => ({ ...p, profileVisibility: newV })); await refreshProfile(); toast.success(`Profile set to ${newV} ⚡`); }
   };
 
   const handleSaveBio = async () => {
     setSavingBio(true);
     const result = await updateUserBio(userId, bioText);
-    if (result.success) { setProfile((p) => ({ ...p, bio: bioText })); setEditingBio(false); toast.success("Bio updated!"); }
+    if (result.success) { setProfile((p) => ({ ...p, bio: bioText })); setEditingBio(false); toast.success("Bio updated! ✨"); }
     setSavingBio(false);
   };
 
@@ -126,13 +134,13 @@ const ProfilePage = () => {
     setUploadingPhoto(true);
     const result = await uploadProfilePhoto(userId, file);
     setUploadingPhoto(false);
-    if (result.success) { setProfile((p) => ({ ...p, photoURL: result.photoURL, avatarColor: null })); await refreshProfile(); toast.success("Profile photo updated! ✅"); }
+    if (result.success) { setProfile((p) => ({ ...p, photoURL: result.photoURL, avatarColor: null })); await refreshProfile(); toast.success("Photo updated! 📸"); }
     else toast.error("Upload failed. Try again.");
   };
 
   const handleColorChange = async (color) => {
     const result = await updateAvatarColor(userId, color);
-    if (result.success) { setProfile((p) => ({ ...p, avatarColor: color, photoURL: null })); await refreshProfile(); setShowColorPicker(false); toast.success("Avatar color updated!"); }
+    if (result.success) { setProfile((p) => ({ ...p, avatarColor: color, photoURL: null })); await refreshProfile(); setShowColorPicker(false); toast.success("Avatar color updated! 🎨"); }
   };
 
   const totalDownloads = notes.reduce((sum, n) => sum + (n.downloadCount || 0), 0);
@@ -152,269 +160,294 @@ const ProfilePage = () => {
   });
   const handleSubjectChange = (s) => { setSubjectFilter(s); setUnitFilter("all"); };
 
+  // Glass panel style
+  const glassPanel = {
+    background: "rgba(20, 20, 25, 0.4)",
+    backdropFilter: "blur(40px) saturate(250%)",
+    WebkitBackdropFilter: "blur(40px) saturate(250%)",
+    border: "1px solid rgba(255, 255, 255, 0.05)",
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05)",
+  };
+
   if (loading) return <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10"><ProfileSkeleton /></div>;
 
   if (!isOwner && profile?.isPrivate) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-center">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white mb-8 transition-all hover:translate-x-[-4px]"><ArrowLeft size={16} /> Back</button>
-        <div className="glass-card rounded-2xl p-12" style={{ backdropFilter: "blur(28px)", background: "rgba(0,0,0,0.6)" }}>
-          <Lock size={48} className="text-gray-600 mx-auto mb-4" />
-          <h2 className="text-xl font-display font-bold text-white mb-2">Anonymous</h2>
-          <p className="text-gray-500 text-sm">This profile is private.</p>
+      <div className="relative min-h-screen text-white overflow-hidden pb-16 pt-10 px-4">
+        {/* Background Neon Aura Orbs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+          <div className="absolute top-[20%] left-[30%] w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-[100px] mix-blend-screen animate-pulse-slow"></div>
+        </div>
+        <div className="max-w-3xl mx-auto text-center">
+          <button onClick={() => navigate(-1)} className="flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white mb-10 transition-all hover:-translate-x-1 mx-auto font-bold uppercase tracking-widest">
+            <ArrowLeft size={16} /> Retreat
+          </button>
+          <div className="rounded-[3rem] p-16 transform-gpu border border-white/5 shadow-2xl relative overflow-hidden" style={glassPanel}>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+            <div className="w-24 h-24 mx-auto bg-white/5 rounded-3xl flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+              <Lock size={40} className="text-gray-500" />
+            </div>
+            <h2 className="text-3xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 mb-3">Ghost Mode</h2>
+            <p className="text-gray-400 font-medium">This user's profile is strictly private. 🚷</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 page-enter" style={{ perspective: "1200px" }}>
-      <button onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm mb-6 transition-all duration-200 hover:translate-x-[-4px] group"
-        style={{ color: "var(--text-muted)" }}
-        onMouseEnter={e => e.currentTarget.style.color = "white"}
-        onMouseLeave={e => e.currentTarget.style.color = "var(--text-muted)"}>
-        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
-      </button>
+    <div className="relative min-h-screen text-white overflow-hidden pb-16">
+      {/* Background Neon Aura Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/20 blur-[120px] mix-blend-screen animate-pulse-slow"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-fuchsia-600/10 blur-[150px] mix-blend-screen"></div>
+        <div className="absolute top-[40%] left-[60%] w-[300px] h-[300px] rounded-full bg-violet-600/10 blur-[100px] mix-blend-screen"></div>
+      </div>
 
-      {/* Profile Header — Glassy 3D */}
-      <div className="rounded-2xl p-6 mb-8 transform-gpu hover:shadow-2xl transition-all duration-300"
-        style={{
-          background: "linear-gradient(145deg, rgba(15,18,32,0.85), rgba(10,12,20,0.75))",
-          border: "1px solid rgba(108,138,255,0.15)",
-          backdropFilter: "blur(28px) saturate(180%)",
-          boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-          transform: "translateZ(2px)",
-        }}>
-        <div className="flex flex-col sm:flex-row items-start gap-5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 page-enter" style={{ perspective: "1200px" }}>
+        
+        <button onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest mb-8 transition-all duration-300 hover:-translate-x-1 group text-gray-400 hover:text-white relative z-10">
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
+        </button>
 
-          {/* Avatar with floating animation + 3D hover */}
-          <div className="relative flex-shrink-0 group/avatar">
-            <div
-              className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-3xl font-bold font-display overflow-hidden transition-all duration-300 group-hover/avatar:scale-105 group-hover/avatar:rotate-1"
-              style={{
-                backgroundColor: profile?.avatarColor || "#3a5aff",
-                boxShadow: `0 0 24px ${profile?.avatarColor || "#3a5aff"}60`,
-                transform: "translateZ(10px)",
-                animation: "floatAvatar 4s ease-in-out infinite",
-              }}>
-              {profile?.photoURL
-                ? <img src={profile.photoURL} alt="avatar" className="w-full h-full object-cover" />
-                : profile?.username?.[0]?.toUpperCase()}
-            </div>
-            {isOwner && (
-              <button onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+        {/* Profile Header — Holographic GenZ look */}
+        <div className="rounded-[2.5rem] p-8 md:p-10 mb-10 transform-gpu transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(139,92,246,0.2)] group relative overflow-hidden"
+          style={{
+            background: "linear-gradient(120deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            backdropFilter: "blur(40px) saturate(250%)",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05)",
+          }}>
+          
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 mix-blend-overlay pointer-events-none" />
+
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+            {/* Avatar */}
+            <div className="relative flex-shrink-0 group/avatar mt-2 md:mt-0">
+              <div
+                className="w-28 h-28 rounded-3xl flex items-center justify-center text-white text-4xl font-extrabold font-display overflow-hidden transition-all duration-500 group-hover/avatar:scale-105 group-hover/avatar:-rotate-3"
                 style={{
-                  background: "linear-gradient(135deg, #6c8aff, #a78bfa)",
-                  boxShadow: "0 4px 12px rgba(108,138,255,0.5)",
-                }}
-                title="Change photo">
-                {uploadingPhoto
-                  ? <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                  : <Camera size={13} className="text-white" />}
-              </button>
-            )}
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-            {isOwner && showColorPicker && (
-              <div className="absolute top-24 left-0 rounded-2xl p-3 z-50 animate-fade-in"
-                style={{
-                  background: "rgba(10,12,20,0.96)",
-                  border: "1px solid rgba(108,138,255,0.3)",
-                  boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
-                  backdropFilter: "blur(24px)",
+                  backgroundColor: profile?.avatarColor || "#8b5cf6",
+                  boxShadow: `0 0 40px ${profile?.avatarColor || "#8b5cf6"}60`,
+                  animation: "floatAvatar 5s ease-in-out infinite",
+                  border: "2px solid rgba(255,255,255,0.2)"
                 }}>
-                <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>Pick avatar color</p>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {AVATAR_COLORS.map((color) => (
-                    <button key={color} onClick={() => handleColorChange(color)}
-                      className="w-7 h-7 rounded-lg border-2 transition-all hover:scale-110"
-                      style={{ backgroundColor: color, borderColor: profile?.avatarColor === color ? "white" : "transparent" }} />
-                  ))}
-                </div>
+                {profile?.photoURL
+                  ? <img src={profile.photoURL} alt="avatar" className="w-full h-full object-cover" />
+                  : profile?.username?.[0]?.toUpperCase()}
               </div>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <h1 className="text-2xl font-display font-bold text-white">{profile?.username}</h1>
-              <span className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-xl font-semibold"
-                style={{
-                  background: profile?.profileVisibility === "public" ? "rgba(74,222,128,0.12)" : "rgba(107,114,128,0.12)",
-                  border: `1px solid ${profile?.profileVisibility === "public" ? "rgba(74,222,128,0.3)" : "rgba(107,114,128,0.25)"}`,
-                  color: profile?.profileVisibility === "public" ? "#4ade80" : "#9ca3af",
-                }}>
-                {profile?.profileVisibility === "public" ? <Globe size={11} /> : <Lock size={11} />}
-                {profile?.profileVisibility}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-mono px-2.5 py-1 rounded-xl"
-                style={{ background: "rgba(108,138,255,0.1)", border: "1px solid rgba(108,138,255,0.2)", color: "rgba(108,138,255,0.9)" }}>
-                {profile?.uniqueId}
-              </span>
-              <button onClick={handleCopyId} className="p-1 rounded-lg transition-all duration-200 hover:scale-110"
-                style={{ color: "var(--text-muted)" }}
-                onMouseEnter={e => e.currentTarget.style.color = "rgba(108,138,255,0.9)"}
-                onMouseLeave={e => e.currentTarget.style.color = "var(--text-muted)"}>
-                {idCopied ? <CheckCheck size={14} style={{ color: "#4ade80" }} /> : <Copy size={14} />}
-              </button>
-            </div>
-
-            {/* Bio */}
-            {isOwner && editingBio ? (
-              <div className="flex gap-2 mt-2">
-                <input value={bioText} onChange={(e) => setBioText(e.target.value)} maxLength={150}
-                  placeholder="Write a short bio..."
-                  className="flex-1 rounded-xl px-3 py-1.5 text-sm text-white placeholder-gray-600 outline-none transition-all focus:ring-1 focus:ring-blue-500"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(108,138,255,0.25)" }} />
-                <button onClick={handleSaveBio} disabled={savingBio}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-all hover:scale-105"
-                  style={{ background: "linear-gradient(135deg, #6c8aff, #a78bfa)" }}>
-                  {savingBio ? "Saving..." : "Save"}
+              
+              {isOwner && (
+                <button onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto}
+                  className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
+                    backdropFilter: "blur(20px)",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.5)",
+                  }}
+                  title="Change photo">
+                  {uploadingPhoto
+                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : <Camera size={18} className="text-white drop-shadow-md" />}
                 </button>
-                <button onClick={() => { setEditingBio(false); setBioText(profile?.bio || ""); }}
-                  className="px-3 py-1.5 rounded-xl text-xs transition-colors hover:bg-white/10"
-                  style={{ color: "var(--text-muted)" }}>Cancel</button>
-              </div>
-            ) : (
-              <p className="text-sm transition-colors group/bio"
-                style={{ color: "var(--text-secondary)", cursor: isOwner ? "pointer" : "default" }}
-                onClick={() => isOwner && setEditingBio(true)}>
-                {profile?.bio || (isOwner ? "Click to add a bio..." : "No bio yet.")}
-                {isOwner && !profile?.bio && <span className="ml-1 opacity-0 group-hover/bio:opacity-100 transition-opacity">✏️</span>}
-              </p>
-            )}
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+              
+              {isOwner && showColorPicker && (
+                <div className="absolute top-32 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-0 rounded-2xl p-4 z-50 animate-fade-in"
+                  style={{
+                    background: "rgba(20,20,25,0.95)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    boxShadow: "0 25px 50px rgba(0,0,0,0.8)",
+                    backdropFilter: "blur(40px)",
+                  }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-3 text-gray-400 text-center md:text-left">Pick Aura</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {AVATAR_COLORS.map((color) => (
+                      <button key={color} onClick={() => handleColorChange(color)}
+                        className="w-8 h-8 rounded-xl border-2 transition-all hover:scale-125 hover:rotate-6"
+                        style={{ backgroundColor: color, borderColor: profile?.avatarColor === color ? "white" : "transparent" }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
+            <div className="flex-1 min-w-0 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-3">
+                <h1 className="text-3xl md:text-4xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{profile?.username}</h1>
+                <span className="flex items-center gap-1.5 text-[10px] md:text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-widest mt-1 md:mt-2"
+                  style={{
+                    background: profile?.profileVisibility === "public" ? "rgba(74,222,128,0.1)" : "rgba(156,163,175,0.1)",
+                    border: `1px solid ${profile?.profileVisibility === "public" ? "rgba(74,222,128,0.3)" : "rgba(156,163,175,0.3)"}`,
+                    color: profile?.profileVisibility === "public" ? "#4ade80" : "#9ca3af",
+                  }}>
+                  {profile?.profileVisibility === "public" ? <Globe size={12} /> : <Lock size={12} />}
+                  {profile?.profileVisibility}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-5">
+                <span className="text-xs md:text-sm font-mono font-bold px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-cyan-400">
+                  {profile?.uniqueId}
+                </span>
+                <button onClick={handleCopyId} className="p-2 rounded-xl transition-all duration-300 hover:bg-white/10 active:scale-95 border border-transparent hover:border-white/20 text-gray-400 hover:text-white">
+                  {idCopied ? <CheckCheck size={16} className="text-green-400" /> : <Copy size={16} />}
+                </button>
+              </div>
+
+              {/* Bio Section */}
+              {isOwner && editingBio ? (
+                <div className="flex flex-col sm:flex-row gap-2 mt-2 max-w-lg mx-auto md:mx-0">
+                  <input value={bioText} onChange={(e) => setBioText(e.target.value)} maxLength={150}
+                    placeholder="Set your vibe... (150 chars max)"
+                    className="flex-1 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-all focus:ring-2 focus:ring-violet-500/50 bg-white/5 border border-white/10" />
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveBio} disabled={savingBio}
+                      className="px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 bg-gradient-to-r from-violet-600 to-fuchsia-600 border border-white/20 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                      {savingBio ? "..." : "Save ✨"}
+                    </button>
+                    <button onClick={() => { setEditingBio(false); setBioText(profile?.bio || ""); }}
+                      className="px-4 py-2.5 rounded-xl text-sm font-bold transition-colors bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm md:text-base transition-colors group/bio max-w-xl mx-auto md:mx-0 leading-relaxed text-gray-300 relative"
+                  style={{ cursor: isOwner ? "pointer" : "default" }}
+                  onClick={() => isOwner && setEditingBio(true)}>
+                  {profile?.bio || (isOwner ? "Tap here to set your vibe... ✨" : "No bio yet.")}
+                  {isOwner && !profile?.bio && <span className="absolute -right-6 top-0 opacity-0 group-hover/bio:opacity-100 transition-opacity text-xl">✏️</span>}
+                </p>
+              )}
+
+              {isOwner && (
+                <button onClick={() => setShowColorPicker(!showColorPicker)}
+                  className="mt-4 text-xs font-bold uppercase tracking-widest transition-all hover:text-white text-gray-500 border-b border-gray-600 hover:border-white pb-0.5">
+                  Customize Aura
+                </button>
+              )}
+
+              <p className="text-xs md:text-sm mt-6 flex items-center justify-center md:justify-start gap-2 text-gray-500 font-medium">
+                <Calendar size={14} className="text-violet-400" />
+                Joined {formatDate(profile?.createdAt)}
+              </p>
+            </div>
+
+            {/* Owner controls */}
             {isOwner && (
-              <button onClick={() => setShowColorPicker(!showColorPicker)}
-                className="mt-2 text-xs underline transition-all hover:scale-105"
-                style={{ color: "var(--text-muted)" }}>
-                Change avatar color
+              <button onClick={handleVisibilityToggle}
+                className="mt-4 md:mt-0 flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 active:scale-95 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                {profile?.profileVisibility === "public" ? <><Lock size={16} className="text-rose-400"/> Go Private</> : <><Globe size={16} className="text-green-400"/> Go Public</>}
               </button>
             )}
-
-            <p className="text-xs mt-3 flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
-              <Calendar size={11} style={{ color: "rgba(108,138,255,0.6)" }} />
-              Joined {formatDate(profile?.createdAt)}
-            </p>
           </div>
 
-          {/* Owner controls — with 3D hover */}
-          {isOwner && (
-            <button onClick={handleVisibilityToggle}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "var(--text-secondary)",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(108,138,255,0.4)"; e.currentTarget.style.color = "white"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "var(--text-secondary)"; }}>
-              {profile?.profileVisibility === "public" ? <><Lock size={14} /> Make Private</> : <><Globe size={14} /> Make Public</>}
-            </button>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-4 md:gap-6 mt-8 pt-8 border-t border-white/10">
+            <TiltStatCard icon={FileText} label="Drops" value={notes.length} color="#c084fc" delay="0s" />
+            <TiltStatCard icon={Download} label="Hits" value={totalDownloads} color="#22d3ee" delay="0.1s" />
+            <TiltStatCard icon={Star} label="Vibe" value={avgRating} color="#fbbf24" delay="0.2s" />
+          </div>
+        </div>
+
+        {/* Notes Collection Section */}
+        <div className="relative z-10">
+          <h2 className="text-2xl font-display font-extrabold text-white mb-6 flex items-center gap-3">
+            Archive <span className="text-lg text-violet-400">📂</span>
+          </h2>
+
+          {/* Subject Filter — Glassy pill buttons */}
+          {allSubjects.length > 2 && (
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500 mr-2 hidden sm:block">Subject:</span>
+              {allSubjects.map((s) => (
+                <button key={s} onClick={() => handleSubjectChange(s)}
+                  className="px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95"
+                  style={{
+                    background: subjectFilter === s ? "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.3))" : "rgba(255,255,255,0.03)",
+                    border: subjectFilter === s ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(255,255,255,0.08)",
+                    color: subjectFilter === s ? "white" : "#9ca3af",
+                    boxShadow: subjectFilter === s ? "0 10px 20px -5px rgba(139,92,246,0.4)" : "none",
+                    backdropFilter: "blur(20px)",
+                  }}>
+                  {s === "all" ? "All Subjects" : s}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Unit Filter — Sleek glassy pills */}
+          {allUnits.length > 2 && (
+            <div className="flex flex-wrap items-center gap-3 mb-8">
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500 mr-2 hidden sm:block">Unit:</span>
+              {allUnits.map((u) => (
+                <button key={u} onClick={() => setUnitFilter(u)}
+                  className="px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 capitalize"
+                  style={{
+                    background: unitFilter === u ? "rgba(45,212,191,0.15)" : "transparent",
+                    border: unitFilter === u ? "1px solid rgba(45,212,191,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                    color: unitFilter === u ? "#2dd4bf" : "#6b7280",
+                    boxShadow: unitFilter === u ? "0 0 15px rgba(45,212,191,0.2)" : "none",
+                  }}>
+                  {u === "all" ? "All Units" : u.replace("unit ", "Unit ")}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {notesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(4)].map((_, i) => <NoteCardSkeleton key={i} />)}
+            </div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="text-center py-20 rounded-[2.5rem] transform-gpu transition-all duration-500 border border-white/5 relative overflow-hidden"
+              style={glassPanel}>
+              <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent pointer-events-none" />
+              <FileText size={48} className="mx-auto mb-6 text-gray-600 opacity-50" />
+              <p className="text-xl font-bold text-gray-400 mb-2">Vault is empty.</p>
+              {isOwner && (
+                <button onClick={() => navigate("/upload")}
+                  className="mt-6 px-8 py-3.5 rounded-full text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+                  style={{ background: "linear-gradient(135deg, #8b5cf6, #06b6d4)", border: "1px solid rgba(255,255,255,0.2)" }}>
+                  Drop your first note 🚀
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredNotes.map((note) => <NoteCard key={note.id} note={note} />)}
+            </div>
           )}
         </div>
 
-        {/* Stats with 3D tilt cards */}
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-5" style={{ borderTop: "1px solid rgba(108,138,255,0.1)" }}>
-          <TiltStatCard icon={FileText} label="Notes" value={notes.length} color="#6c8aff" delay="0s" />
-          <TiltStatCard icon={Download} label="Downloads" value={totalDownloads} color="#2dd4bf" delay="0.1s" />
-          <TiltStatCard icon={Star} label="Avg Rating" value={avgRating} color="#fbbf24" delay="0.2s" />
-        </div>
-      </div>
-
-      {/* Notes Section */}
-      <div>
-        <h2 className="text-lg font-display font-semibold text-white mb-5">Uploaded Notes</h2>
-
-        {/* Subject Filter — Glassy buttons with 3D lift */}
-        {allSubjects.length > 2 && (
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-xs font-mono mr-1" style={{ color: "var(--text-muted)" }}>Subject:</span>
-            {allSubjects.map((s) => (
-              <button key={s} onClick={() => handleSubjectChange(s)}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 hover:scale-105 hover:-translate-y-0.5"
-                style={{
-                  background: subjectFilter === s ? "linear-gradient(135deg, rgba(108,138,255,0.3), rgba(167,139,250,0.2))" : "rgba(255,255,255,0.05)",
-                  border: subjectFilter === s ? "1px solid rgba(108,138,255,0.5)" : "1px solid rgba(255,255,255,0.08)",
-                  color: subjectFilter === s ? "white" : "var(--text-muted)",
-                  boxShadow: subjectFilter === s ? "0 4px 12px rgba(108,138,255,0.2)" : "none",
-                  backdropFilter: "blur(8px)",
-                }}>
-                {s === "all" ? "All Subjects" : s}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Unit Filter — Glassy buttons */}
-        {allUnits.length > 2 && (
-          <div className="flex flex-wrap items-center gap-2 mb-5">
-            <span className="text-xs font-mono mr-1" style={{ color: "var(--text-muted)" }}>Unit:</span>
-            {allUnits.map((u) => (
-              <button key={u} onClick={() => setUnitFilter(u)}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 capitalize"
-                style={{
-                  background: unitFilter === u ? "linear-gradient(135deg, rgba(45,212,191,0.25), rgba(45,212,191,0.15))" : "rgba(255,255,255,0.05)",
-                  border: unitFilter === u ? "1px solid rgba(45,212,191,0.5)" : "1px solid rgba(255,255,255,0.08)",
-                  color: unitFilter === u ? "#2dd4bf" : "var(--text-muted)",
-                  boxShadow: unitFilter === u ? "0 4px 12px rgba(45,212,191,0.2)" : "none",
-                  backdropFilter: "blur(8px)",
-                }}>
-                {u === "all" ? "All Units" : u.replace("unit ", "Unit ")}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {notesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => <NoteCardSkeleton key={i} />)}
-          </div>
-        ) : filteredNotes.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl transform-gpu hover:scale-[1.01] transition-all duration-300"
-            style={{
-              background: "rgba(15,18,32,0.7)",
-              border: "1px solid rgba(108,138,255,0.12)",
-              backdropFilter: "blur(20px)",
-            }}>
-            <FileText size={36} className="mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
-            <p style={{ color: "var(--text-secondary)" }}>No notes found.</p>
-            {isOwner && (
-              <button onClick={() => navigate("/upload")}
-                className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-                style={{ background: "rgba(108,138,255,0.2)", border: "1px solid rgba(108,138,255,0.4)", color: "rgba(108,138,255,0.95)" }}>
-                Upload your first note →
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {filteredNotes.map((note) => <NoteCard key={note.id} note={note} />)}
-          </div>
-        )}
       </div>
 
       <style jsx>{`
         @keyframes floatAvatar {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-4px) rotate(1deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-8px) rotate(2deg); }
         }
         @keyframes floatStat {
-          0% { transform: perspective(600px) translateY(0px); }
-          50% { transform: perspective(600px) translateY(-3px); }
-          100% { transform: perspective(600px) translateY(0px); }
+          0%, 100% { transform: perspective(1000px) translateY(0px); }
+          50% { transform: perspective(1000px) translateY(-5px); }
         }
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
         }
         .animate-fade-in {
-          animation: fadeIn 0.2s ease-out;
+          animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 8s infinite ease-in-out;
         }
       `}</style>
     </div>
