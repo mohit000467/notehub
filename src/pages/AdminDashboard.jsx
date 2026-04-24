@@ -614,9 +614,11 @@ const AdminDashboard = () => {
                 activeTab === tab.key ? "text-white" : "text-gray-400 hover:text-white"
               }`}
             >
-              {tab.label}
+              {/* Text ko ek span me daal kar z-10 de diya gaya hai */}
+              <span className="relative z-10">{tab.label}</span>
+              
               {activeTab === tab.key && (
-                <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg -z-0 shadow-lg animate-fadeIn" />
+                <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg z-0 shadow-lg animate-fadeIn" />
               )}
             </button>
           ))}
