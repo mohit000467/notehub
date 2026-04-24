@@ -1,5 +1,5 @@
-// src/components/notes/NoteCard.jsx — Glassmorphism Edition
-import React, { useState } from "react";
+// src/components/notes/NoteCard.jsx — 3D Glassmorphism + Smart Animations
+import React, { useState, useRef } from "react";
 import { Download, Star, Calendar, User, Tag, BookOpen, Eye } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { incrementDownload, incrementReadCount } from "../../services/notesService";
@@ -18,19 +18,40 @@ const NoteCard = ({ note, onRatingUpdate }) => {
   const [hoverRating, setHoverRating]     = useState(0);
   const [hasRated] = useState(note.ratedBy?.includes(currentUser?.uid) || false);
   const [hasRead, setHasRead]             = useState(note.readBy?.includes(currentUser?.uid) || false);
+  const cardRef = useRef(null);
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
 
   const fileType = getFileTypeLabel(note.fileType);
 
   const ftGlass = {
-    PDF:  { bg: "rgba(251,113,133,0.1)",  border: "rgba(251,113,133,0.25)",  text: "#fb7185" },
-    DOC:  { bg: "rgba(108,138,255,0.1)",  border: "rgba(108,138,255,0.25)",  text: "#6c8aff" },
-    DOCX: { bg: "rgba(108,138,255,0.1)",  border: "rgba(108,138,255,0.25)",  text: "#6c8aff" },
-    IMG:  { bg: "rgba(74,222,128,0.1)",   border: "rgba(74,222,128,0.25)",   text: "#4ade80" },
-    PPT:  { bg: "rgba(251,191,36,0.1)",   border: "rgba(251,191,36,0.25)",   text: "#fbbf24" },
-    PPTX: { bg: "rgba(251,191,36,0.1)",   border: "rgba(251,191,36,0.25)",   text: "#fbbf24" },
-    FILE: { bg: "rgba(107,114,128,0.1)",  border: "rgba(107,114,128,0.25)",  text: "#9ca3af" },
+    PDF:  { bg: "rgba(251,113,133,0.15)",  border: "rgba(251,113,133,0.3)",  text: "#fb7185" },
+    DOC:  { bg: "rgba(108,138,255,0.15)",  border: "rgba(108,138,255,0.3)",  text: "#6c8aff" },
+    DOCX: { bg: "rgba(108,138,255,0.15)",  border: "rgba(108,138,255,0.3)",  text: "#6c8aff" },
+    IMG:  { bg: "rgba(74,222,128,0.15)",   border: "rgba(74,222,128,0.3)",   text: "#4ade80" },
+    PPT:  { bg: "rgba(251,191,36,0.15)",   border: "rgba(251,191,36,0.3)",   text: "#fbbf24" },
+    PPTX: { bg: "rgba(251,191,36,0.15)",   border: "rgba(251,191,36,0.3)",   text: "#fbbf24" },
+    FILE: { bg: "rgba(107,114,128,0.15)",  border: "rgba(107,114,128,0.3)",  text: "#9ca3af" },
   };
   const ftStyle = ftGlass[fileType.label] || ftGlass.FILE;
+
+  // 3D Tilt handlers
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateYVal = ((x - centerX) / centerX) * 5;
+    const rotateXVal = ((centerY - y) / centerY) * 5;
+    setRotateY(rotateYVal);
+    setRotateX(rotateXVal);
+  };
+  const handleMouseLeave = () => {
+    setRotateX(0);
+    setRotateY(0);
+  };
 
   const handleDownload = async () => {
     try {
@@ -88,22 +109,26 @@ const NoteCard = ({ note, onRatingUpdate }) => {
 
   return (
     <div
-      className="card-lift group relative rounded-2xl overflow-hidden"
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="group relative rounded-2xl overflow-hidden transition-all duration-200"
       style={{
-        background: "linear-gradient(145deg, rgba(15,18,32,0.75) 0%, rgba(10,12,20,0.65) 100%)",
-        backdropFilter: "blur(28px) saturate(160%)",
-        WebkitBackdropFilter: "blur(28px) saturate(160%)",
-        border: "1px solid rgba(108,138,255,0.1)",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+        transform: `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(8px)`,
+        background: "linear-gradient(145deg, rgba(15,18,32,0.85), rgba(10,12,20,0.75))",
+        backdropFilter: "blur(28px) saturate(180%)",
+        border: "1px solid rgba(108,138,255,0.15)",
+        boxShadow: "0 20px 35px -12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+        willChange: "transform",
       }}
     >
       {/* Top shine line */}
-      <div className="absolute top-0 left-0 right-0 h-px opacity-60 group-hover:opacity-100 transition-opacity"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(108,138,255,0.5), rgba(167,139,250,0.3), transparent)" }} />
+      <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(108,138,255,0.7), rgba(167,139,250,0.5), transparent)" }} />
 
       {/* Hover glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,138,255,0.06), transparent)" }} />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(108,138,255,0.08), transparent)" }} />
 
       <div className="relative z-10 p-5">
         {/* Header */}
@@ -111,7 +136,7 @@ const NoteCard = ({ note, onRatingUpdate }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span
-                className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg"
+                className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg transition-all group-hover:scale-105"
                 style={{ background: ftStyle.bg, border: `1px solid ${ftStyle.border}`, color: ftStyle.text }}
               >
                 {fileType.label}
@@ -138,11 +163,11 @@ const NoteCard = ({ note, onRatingUpdate }) => {
           </p>
         )}
 
-        <div className="gradient-divider mb-3" />
+        <div className="gradient-divider mb-3" style={{ background: "linear-gradient(90deg, transparent, rgba(108,138,255,0.2), transparent)" }} />
 
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mb-4" style={{ color: "var(--text-muted)" }}>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 group-hover:text-white transition-colors">
             <User size={11} style={{ color: "var(--accent)" }} />
             {note.uploaderName || note.username || "Anonymous"}
           </span>
@@ -158,7 +183,7 @@ const NoteCard = ({ note, onRatingUpdate }) => {
           </span>
         </div>
 
-        {/* Stars */}
+        {/* Stars with floating animation */}
         <div className="flex items-center gap-1 mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -166,7 +191,8 @@ const NoteCard = ({ note, onRatingUpdate }) => {
               onClick={() => handleRate(star)}
               onMouseEnter={() => !hasRated && setHoverRating(star)}
               onMouseLeave={() => setHoverRating(0)}
-              className="focus:outline-none transition-transform hover:scale-125 active:scale-95"
+              className="focus:outline-none transition-all duration-200 hover:scale-125 active:scale-95"
+              style={{ animation: `floatStar ${0.3 + star * 0.1}s ease-in-out infinite alternate` }}
             >
               <Star
                 size={14}
@@ -179,20 +205,21 @@ const NoteCard = ({ note, onRatingUpdate }) => {
           </span>
         </div>
 
-        {/* Read + Download buttons */}
+        {/* Read + Download buttons with glassy 3D effect */}
         <div className="flex gap-2">
           <button
             onClick={handleRead}
             disabled={reading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50"
             style={{
               background: hasRead
-                ? "rgba(45,212,191,0.08)"
-                : "linear-gradient(135deg, rgba(45,212,191,0.12), rgba(45,212,191,0.06))",
+                ? "rgba(45,212,191,0.1)"
+                : "linear-gradient(135deg, rgba(45,212,191,0.15), rgba(45,212,191,0.05))",
               border: hasRead
                 ? "1px solid rgba(45,212,191,0.4)"
-                : "1px solid rgba(45,212,191,0.2)",
-              color: hasRead ? "rgba(45,212,191,0.7)" : "rgba(45,212,191,0.9)",
+                : "1px solid rgba(45,212,191,0.25)",
+              color: hasRead ? "rgba(45,212,191,0.8)" : "rgba(45,212,191,0.95)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             }}
           >
             <BookOpen size={14} className={reading ? "animate-pulse" : ""} />
@@ -202,13 +229,14 @@ const NoteCard = ({ note, onRatingUpdate }) => {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50"
             style={{
               background: downloading
                 ? "rgba(108,138,255,0.08)"
-                : "linear-gradient(135deg, rgba(108,138,255,0.15), rgba(167,139,250,0.1))",
-              border: "1px solid rgba(108,138,255,0.25)",
-              color: downloading ? "rgba(108,138,255,0.5)" : "rgba(108,138,255,0.95)",
+                : "linear-gradient(135deg, rgba(108,138,255,0.2), rgba(167,139,250,0.1))",
+              border: "1px solid rgba(108,138,255,0.35)",
+              color: downloading ? "rgba(108,138,255,0.6)" : "rgba(108,138,255,0.95)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             }}
           >
             <Download size={14} className={downloading ? "animate-bounce" : ""} />
@@ -216,6 +244,15 @@ const NoteCard = ({ note, onRatingUpdate }) => {
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes floatStar {
+          0% { transform: translateY(0px); }
+          100% { transform: translateY(-2px); }
+        }
+        .star-active { fill: #fbbf24; stroke: #fbbf24; color: #fbbf24; }
+        .star-inactive { fill: none; stroke: #4b5563; color: #4b5563; }
+      `}</style>
     </div>
   );
 };
